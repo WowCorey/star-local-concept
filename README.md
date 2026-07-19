@@ -1,56 +1,121 @@
 # Star Local Concept
 
-**Unofficial, independent prototype concept for an AI-enabled hospitality member experience.**
+**An independent, unofficial prototype for an AI-enabled hospitality member experience.**
 
-This repository will contain a mobile-first demonstration application showing how a hospitality member app could coordinate a venue visit across bookings, table selection, ordering, rewards, courtesy transport, entertainment requests and customer-controlled personalisation.
+Star Local is a polished, mobile-first meeting showpiece that demonstrates one proposition:
+
+> Tell the venue what kind of night you want, and the system coordinates the visit around you.
+
+The prototype makes a complete hospitality journey tangible across booking, seating, ordering, group coordination, courtesy transport, screen requests, rewards, service, accessibility and customer-controlled personalisation.
+
+![Star Local desktop presentation showing the synthetic Alex Morgan flagship journey](docs/screenshots/home-desktop.png)
+
+_Original prototype capture. All visible people, venues, times, balances and service states are synthetic._
 
 ## Important status
 
 - This is a **concept prototype**, not a production product.
-- It is **not an official Star Group product**.
-- It is not connected to, approved by, sponsored by or endorsed by Star Group or any associated venue.
-- All customer, venue, menu, pricing, event, transport, loyalty and operational data used in the prototype must be **fabricated or clearly licensed for public use**.
-- No real customer, staff, membership, gaming, payment or venue-operational data may be committed.
+- It is **not an official Star Group product** and is not connected to, approved by, sponsored by or endorsed by Star Group.
+- All people, venues, tables, layouts, menus, prices, events, promotions, rewards, routes and service states are **fabricated**.
+- It does not process real bookings, payments, alcohol orders, loyalty records, identities or transport requests.
+- It has no backend and makes no live AI, POS, booking, payment, location, bus, phone, gaming or venue-system calls.
 
-## Prototype objective
+## Experience
 
-A person unfamiliar with the design should be able to use the prototype for five minutes and understand this proposition:
+The six destinations keep the current or next customer action prominent:
 
-> Tell the venue what kind of night you want, and the system coordinates the visit around you.
+- **Home** - contextual next action and the Tonight timeline
+- **Visit** - venue, booking, customer-safe floor plan, table and check-in
+- **Order** - venue-local menu, specials, modifications, group order and simulated split payment
+- **Ride** - inbound and return windows plus a privacy-preserving staged tracker
+- **Rewards** - fabricated points, draw entries, vouchers and a non-functional demo card
+- **Me** - memories, communications, accessibility, service requests and prototype status
 
-The prototype is intended as a meeting showpiece and interaction demonstration. It will not process real payments, bookings, alcohol orders, gaming activity, location data or customer identities.
+**Ask Star** is a deterministic, scripted assistant. It converts a supported phrase into a visible structured result before updating any demo state and always keeps human help available.
 
-## Planned experience
+## Three deliberately different journeys
 
-The proposed navigation is:
+- **Alex Morgan / Harbour Family Hotel** - the flagship Thursday family visit, Table 23, a barbecue-base parmigiana, Cowboys viewing and courtesy transport
+- **Jordan Lee / Northside Sports Hotel** - an event-led Sports Bar visit with UFC, Broncos, group tables and later food
+- **Taylor Smith / Hinterland Local** - an accessibility-led community visit with a low table, step-free path, trivia and accessible courtesy-bus capacity
 
-- **Home** — next best action and the current visit plan
-- **Visit** — venue, booking, seating zone, table and check-in
-- **Order** — fabricated menus, modifications, group orders and payment simulation
-- **Ride** — courtesy-bus booking and privacy-preserving status simulation
-- **Rewards** — fabricated points, benefits, vouchers and member-draw information
-- **Me** — customer-controlled preferences, permissions and remembered information
+Open **Demo Controls** to load any journey, move the simulated clock, change venue or persona, and adjust booking, order, ride, kitchen, service, staff-review and sold-out states. **Reset demo** restores Alex's flagship scenario and persisted state.
 
-A scripted **Ask Star** assistant will demonstrate conversational actions without connecting to a live AI model.
+## Local setup
 
-## Planned technical approach
+Requirements: Node.js 22.12 or newer. CI and deployment use Node.js 24.
 
-- React
-- TypeScript
-- Vite
-- React Router
-- lightweight client-side state
-- local synthetic fixture data
-- GitHub Pages deployment
-- no production backend
-- no live AI, payment, geolocation, gaming or venue-system integrations
+```bash
+npm install
+npm run dev
+```
 
-## Public-repository safety rule
+Vite prints the local address. All runtime data comes from local TypeScript fixtures and persists under the browser key `star-local-demo-v1`.
 
-Do not commit screenshots or photographs from existing staff or loyalty applications. Reference material supplied during design may contain personal identifiers, staff numbers, QR credentials, dates of birth, telephone numbers, benefits, venue layouts or other non-public information.
+## Commands
 
-See [`docs/PUBLIC_DATA_AND_ASSET_RULES.md`](docs/PUBLIC_DATA_AND_ASSET_RULES.md) before adding any asset or fixture.
+```bash
+npm run dev          # development server
+npm run build        # strict TypeScript build and Vite production bundle
+npm run preview      # preview the production build
+npm run lint         # ESLint
+npm run typecheck    # strict TypeScript checks
+npm run test         # Vitest unit and component tests
+npm run test:e2e     # Playwright mobile and desktop journeys
+npm run format:check # Prettier drift check
+```
 
-## Current status
+For a first local Playwright run:
 
-Repository foundation created. The prototype design document and Codex implementation prompt will be added after review.
+```bash
+npx playwright install chromium
+npm run test:e2e
+```
+
+## GitHub Pages deployment
+
+`vite.config.ts` sets the production base path to `/star-local-concept/`. The deployment workflow builds `dist`, uploads a Pages artifact and deploys it after a push to `main`.
+
+Expected URL: <https://wowcorey.github.io/star-local-concept/>
+
+Repository administrators may need to set **Settings -> Pages -> Build and deployment -> Source** to **GitHub Actions** once. No environment variables or secrets are required.
+
+## Project structure
+
+```text
+src/
+  app/          Router and presentation shell
+  components/   Reusable accessible UI primitives
+  features/     Scripted assistant and presenter controls
+  fixtures/     Typed synthetic members, venues, layouts and menus
+  pages/        Six primary destinations and the floor-plan flow
+  services/     Deterministic fixture repository and mock delays
+  state/        Persisted demo state and explicit transitions
+  styles/       Design tokens, responsive presentation frame and components
+  types/        Domain models
+tests/e2e/      Principal Playwright journeys
+docs/           Architecture, demo, fixtures, accessibility, privacy and safety
+```
+
+## Safety and fixture rules
+
+Every exported top-level fixture includes `synthetic: true`. Fixture validation checks cross-entity references. Gaming areas are not customer-visible recommendation inputs. Alcohol and allergy states require human confirmation. Ride status never reveals another passenger, address, stop, full route or precise continuous movement.
+
+Do not commit the private design-document PDF, its screenshots, reference photographs, real venue layouts, real identifiers or extracted company assets. See [Public Data and Asset Rules](docs/PUBLIC_DATA_AND_ASSET_RULES.md) and [Security and Privacy](docs/SECURITY_AND_PRIVACY.md).
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Meeting demo guide](docs/DEMO_GUIDE.md)
+- [Fixture data](docs/FIXTURE_DATA.md)
+- [Accessibility](docs/ACCESSIBILITY.md)
+- [Security and privacy](docs/SECURITY_AND_PRIVACY.md)
+- [Public data and asset rules](docs/PUBLIC_DATA_AND_ASSET_RULES.md)
+
+## Known limitations
+
+- All service latency and outcomes are deterministic client-side simulations.
+- Payment, check-in, digital card, phone audio, alcohol ordering, allergy escalation, bottle-shop collection and transport are representational only.
+- The assistant recognises a small, documented intent catalogue and is not a language model.
+- The floor plans are original simplified geometry, not operational maps.
+- Production authentication, consent records, integrations, regulated workflows, analytics and staff tools are intentionally excluded.

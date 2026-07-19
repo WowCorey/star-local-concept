@@ -141,3 +141,14 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Local test and browser artifacts
+playwright-report/
+test-results/
+output/playwright/
+
+# Private reference material must never enter this public repository
+private-reference/
+reference-images/
+*private-reference*
+Star_Local_GitHub_Prototype_Design_Document*.pdf

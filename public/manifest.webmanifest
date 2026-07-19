@@ -1,0 +1,9 @@
+{
+  "name": "Star Local - Unofficial Concept",
+  "short_name": "Star Local",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f8f5ef",
+  "theme_color": "#701e27",
+  "description": "A fully synthetic hospitality concierge concept prototype."
+}
