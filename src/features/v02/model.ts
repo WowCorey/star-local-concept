@@ -123,8 +123,8 @@ export function getHomeNextAction(input: {
     };
   if (input.stage === "in-venue" && input.courtesyBus && input.returnPassengers === 0)
     return { label: "Confirm the return ride", route: "/ride" };
-  if (!input.courtesyBus) return { label: "Review safe travel options", route: "/ride" };
   if (input.serviceRequestState && input.serviceRequestState !== "completed")
     return { label: "View active service request", route: "service" };
+  if (!input.courtesyBus) return { label: "Review safe travel options", route: "/ride" };
   return { label: "Review tonight's plan", route: "/visit" };
 }

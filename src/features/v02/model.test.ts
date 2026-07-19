@@ -166,6 +166,16 @@ describe("Star Local v0.2 operating model", () => {
       label: "Review safe travel options",
       route: "/ride",
     });
+    expect(
+      getHomeNextAction({
+        ...base,
+        bookingState: "confirmed",
+        serviceRequestState: "accepted",
+      }),
+    ).toEqual({
+      label: "View active service request",
+      route: "service",
+    });
   });
 
   it("matches the new structured Ask Star workflows", () => {

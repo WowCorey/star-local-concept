@@ -217,6 +217,9 @@ a {
 }
 .section-heading a,
 .section-heading button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
   border: 0;
   background: transparent;
   color: var(--burgundy-700);
@@ -1938,8 +1941,8 @@ a {
   font-size: 0.8rem;
 }
 .toast button {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border: 0;
@@ -2141,12 +2144,14 @@ a {
 @media (min-width: 560px) {
   .phone-shell {
     width: 430px;
-    min-height: 940px;
+    height: calc(100vh - 48px);
+    min-height: min(940px, calc(100vh - 48px));
     margin: 24px 0;
     border: 1px solid rgba(73, 45, 38, 0.14);
     border-radius: 30px;
     box-shadow: 0 30px 80px rgba(73, 44, 34, 0.18);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
   .app-header {
     position: sticky;
@@ -2709,6 +2714,9 @@ a {
   gap: 4px;
   color: var(--muted);
   font-size: 0.68rem;
+}
+.audio-controls input[type="range"] {
+  min-height: 44px;
 }
 .empty-state.compact {
   padding: 8px;

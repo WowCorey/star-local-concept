@@ -6,7 +6,7 @@ Star Local coordinates the choices that shape a pub visit—venue zone, table, f
 
 > Tell the venue what kind of night you want.
 
-![Star Local v0.2 desktop presentation using the synthetic Alex Morgan journey](docs/screenshots/home-desktop.png)
+![Star Local v0.2.1 desktop Presentation Mode using the synthetic Alex Morgan journey](docs/screenshots/home-desktop.png)
 
 _Every visible person, venue, layout, product, price, event, balance and service state is fabricated._
 
@@ -39,6 +39,16 @@ _Every visible person, venue, layout, product, price, event, balance and service
 - **Taylor Smith / Hinterland Local** — low table, step-free route, accessible transport, community trivia and bottle-shop collection
 
 Use **Demo Controls** to load a journey or tune the simulated day, time, layout, booking, order, service, screen, transport, marketing, rewards, phone and collection states. **Reset demo** restores the v0.2.1 flagship defaults.
+
+## Synthetic prototype views
+
+| Flagship mobile Home                                                                | Joined-table floor plan                                                                              |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ![Flagship mobile Home](docs/screenshots/home-mobile-v0.2.1.png)                    | ![Joined group with individually selectable tables](docs/screenshots/joined-table-mobile-v0.2.1.png) |
+| Table Service request                                                               | Telephone receptionist                                                                               |
+| ![Customer Table Service request](docs/screenshots/table-service-mobile-v0.2.1.png) | ![Synthetic telephone receptionist](docs/screenshots/phone-receptionist-mobile-v0.2.1.png)           |
+
+All captures are generated from the deterministic prototype fixtures. Additional evidence for zone selection, Watch Tonight, drinks and the group round is stored in `docs/screenshots/`.
 
 ## Local setup
 
