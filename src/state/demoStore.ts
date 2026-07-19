@@ -3,6 +3,10 @@ import { persist } from "zustand/middleware";
 import { personas } from "../fixtures/personas";
 import { venues } from "../fixtures/venues";
 import { layouts } from "../fixtures/layouts";
+import { drinkItems } from "../fixtures/drinks";
+import { layoutPresets } from "../fixtures/layoutPresets";
+import { phoneCallScenarios } from "../fixtures/operations";
+import { presentationSteps } from "../fixtures/presentation";
 import { routeServiceRequest } from "../features/v02/model";
 import type {
   AccessibilityPreferences,
@@ -21,6 +25,7 @@ import type {
   OrderState,
   ParticipantAcceptance,
   PersonaId,
+  PhoneCallScenario,
   PhoneAudioState,
   PhoneCallState,
   ScreenRequestState,
@@ -90,6 +95,7 @@ export interface DemoData {
   bottleShopCollection: BottleShopCollection;
   phoneScenarioId: string;
   phoneCallState: PhoneCallState;
+  phoneTranscriptTurnCount: number;
   drawEntries: number;
   drawCountdown: number;
   fictionalDrawResult: "pending" | "not-selected" | "selected";
@@ -131,11 +137,15 @@ interface DemoActions {
   setRidePassengers: (leg: "inbound" | "return", count: number) => void;
   setRideWindow: (leg: "inbound" | "return", window: string) => void;
   chooseOrder: (itemId: string, modifier: "usual" | "standard" | "custom") => void;
+  submitFoodOrder: () => void;
   setOrderState: (state: OrderState) => void;
   setGroupPayment: (method: "mine" | "even" | "items" | "staff") => void;
   chooseDrink: (itemId: string, size: string, participantId?: string) => void;
+  submitDrinkForReview: () => void;
+  cancelDrinkRequest: () => void;
   setDrinkOrderState: (state: DrinkOrderState) => void;
   assignRoundItem: (participantId: string, itemId: string | null) => void;
+  respondToOwnRoundItem: (response: "accepted" | "declined") => void;
   setParticipantAcceptance: (participantId: string, state: ParticipantAcceptance) => void;
   addWaterForEveryone: () => void;
   setScreenRequestState: (state: ScreenRequestState) => void;
@@ -157,13 +167,17 @@ interface DemoActions {
   setPhoneAudio: (enabled: boolean) => void;
   toggleSoldOut: (itemId: string) => void;
   setBottleShopItem: (itemId: string) => void;
+  reserveBottleShopItem: () => void;
+  cancelBottleShopCollection: () => void;
   setBottleShopState: (state: BottleShopCollectionState) => void;
   setPhoneScenario: (id: string) => void;
   setPhoneCallState: (state: PhoneCallState) => void;
-  completePhoneScenario: (createsRide: boolean) => void;
+  setPhoneTranscriptTurnCount: (count: number) => void;
+  completePhoneScenario: (scenario: PhoneCallScenario) => void;
   setDrawCountdown: (minutes: number) => void;
   setFictionalDrawResult: (result: "pending" | "not-selected" | "selected") => void;
   startPresentation: () => void;
+  applyPresentationStep: (index: number) => void;
   nextPresentationStep: () => void;
   previousPresentationStep: () => void;
   exitPresentation: () => void;
@@ -199,6 +213,7 @@ const groupRound = (): GroupRound => ({
   synthetic: true,
   tableId: "table-23",
   split: null,
+  addOns: [],
   participants: [
     {
       id: "round-alex",
@@ -316,6 +331,7 @@ export const initialData = (): DemoData => ({
   },
   phoneScenarioId: "call-usual",
   phoneCallState: "incoming",
+  phoneTranscriptTurnCount: 1,
   drawEntries: 17,
   drawCountdown: 10,
   fictionalDrawResult: "pending",
@@ -398,6 +414,70 @@ const scenarioData = (scenario: DemoScenario): Partial<DemoData> => {
   return initialData();
 };
 
+const presentationData = (requestedIndex: number): Partial<DemoData> => {
+  const index = Math.max(0, Math.min(presentationSteps.length - 1, requestedIndex));
+  const step = presentationSteps[index]!;
+  const base = {
+    ...initialData(),
+    ...scenarioData(step.scenario ?? "flagship"),
+  };
+  const stage = step.setStage ?? base.stage;
+  const preloadedParticipantAcceptance: ParticipantAcceptance =
+    step.preloadDrink?.state === "staff-review"
+      ? "age-check"
+      : step.preloadDrink?.state === "delivered"
+        ? "delivered"
+        : step.preloadDrink?.state === "declined"
+          ? "declined"
+          : ["accepted", "preparing"].includes(step.preloadDrink?.state ?? "")
+            ? "accepted"
+            : "pending";
+  return {
+    ...base,
+    stage,
+    bookingState:
+      stage === "in-venue"
+        ? "checked-in"
+        : stage === "approaching"
+          ? "confirmed"
+          : base.bookingState,
+    selectedZoneId: step.setZone ?? base.selectedZoneId,
+    selectedTableId: step.setTable ?? base.selectedTableId,
+    layoutPresetId: step.setLayoutPreset ?? base.layoutPresetId,
+    screenRequestScreenId: step.preloadScreen?.screenId ?? base.screenRequestScreenId,
+    screenRequestContent: step.preloadScreen?.content ?? base.screenRequestContent,
+    screenRequestState: step.preloadScreen?.state ?? base.screenRequestState,
+    phoneAudioState: step.activatePhoneAudio ? "active" : base.phoneAudioState,
+    phoneAudioScreenId: step.activatePhoneAudio ?? base.phoneAudioScreenId,
+    drinkOrder: step.preloadDrink ?? base.drinkOrder,
+    groupRound: step.preloadDrink?.participantId
+      ? {
+          ...base.groupRound,
+          participants: base.groupRound.participants.map((participant) =>
+            participant.id === step.preloadDrink?.participantId
+              ? {
+                  ...participant,
+                  itemId: step.preloadDrink.itemId,
+                  acceptance: preloadedParticipantAcceptance,
+                }
+              : participant,
+          ),
+        }
+      : base.groupRound,
+    staffReview: step.preloadDrink?.state === "staff-review",
+    phoneScenarioId: step.phoneScenarioId ?? base.phoneScenarioId,
+    phoneCallState: "incoming",
+    phoneTranscriptTurnCount: 1,
+    serviceOpen: Boolean(step.openService),
+    phoneOpen: Boolean(step.openPhone),
+    presentationActive: true,
+    presentationStep: index,
+    demoOpen: false,
+    assistantOpen: false,
+    notice: `Presentation step ${index + 1}: ${step.title}`,
+  };
+};
+
 export function migrateDemoState(persistedState: unknown, version: number): DemoData {
   const base = initialData();
   if (!persistedState || typeof persistedState !== "object") return base;
@@ -414,19 +494,36 @@ export function migrateDemoState(persistedState: unknown, version: number): Demo
       ?.zones.find((zone) => zone.name.toLowerCase() === incoming.preferredZone?.toLowerCase())
       ?.id ??
     context.selectedZoneId;
-  const validTable = layouts
-    .find((layout) => layout.venueId === venueId)
-    ?.tables.some((table) => table.id === incoming.selectedTableId);
+  const layout = layouts.find((item) => item.venueId === venueId);
+  const layoutPresetId = incoming.layoutPresetId ?? context.layoutPresetId;
+  const hiddenTableIds =
+    layoutPresets.find((preset) => preset.id === layoutPresetId)?.hiddenTableIds ?? [];
+  const selectedTable = layout?.tables.find(
+    (table) =>
+      table.id === incoming.selectedTableId &&
+      table.zoneId === selectedZoneId &&
+      !hiddenTableIds.includes(table.id),
+  );
+  const fallbackTable =
+    layout?.tables.find(
+      (table) => table.zoneId === selectedZoneId && !hiddenTableIds.includes(table.id),
+    ) ?? layout?.tables.find((table) => !hiddenTableIds.includes(table.id));
   return {
     ...base,
     ...incoming,
     venueId,
     selectedZoneId,
-    selectedTableId: validTable ? incoming.selectedTableId! : context.selectedTableId,
-    layoutPresetId: incoming.layoutPresetId ?? context.layoutPresetId,
+    selectedTableId: selectedTable?.id ?? fallbackTable?.id ?? context.selectedTableId,
+    layoutPresetId,
     tableFilters: Array.isArray(incoming.tableFilters) ? incoming.tableFilters : [],
     drinkOrder: { ...base.drinkOrder, ...(incoming.drinkOrder ?? {}) },
-    groupRound: incoming.groupRound?.participants ? incoming.groupRound : base.groupRound,
+    groupRound: incoming.groupRound?.participants
+      ? {
+          ...base.groupRound,
+          ...incoming.groupRound,
+          addOns: Array.isArray(incoming.groupRound.addOns) ? incoming.groupRound.addOns : [],
+        }
+      : base.groupRound,
     bottleShopCollection: {
       ...base.bottleShopCollection,
       ...(incoming.bottleShopCollection ?? {}),
@@ -440,7 +537,9 @@ export function migrateDemoState(persistedState: unknown, version: number): Demo
     serviceOpen: false,
     phoneOpen: false,
     notice:
-      version < 2 ? "Star Local v0.2 is ready. Your visit preferences were safely upgraded." : null,
+      version < 3
+        ? "Star Local v0.2.1 is ready. Your visit preferences were safely upgraded."
+        : null,
   };
 }
 
@@ -504,7 +603,25 @@ export const useDemoStore = create<DemoStore>()(
         }),
       selectTable: (selectedTableId) =>
         set({ selectedTableId, bookingState: "changed", notice: "Table preference updated" }),
-      setLayoutPreset: (layoutPresetId) => set({ layoutPresetId, notice: "Venue layout updated" }),
+      setLayoutPreset: (layoutPresetId) =>
+        set((state) => {
+          const preset = layoutPresets.find((item) => item.id === layoutPresetId);
+          const layout = layouts.find((item) => item.venueId === state.venueId);
+          if (!preset?.hiddenTableIds.includes(state.selectedTableId)) {
+            return { layoutPresetId, notice: "Venue layout updated" };
+          }
+          const replacement = layout?.tables.find(
+            (table) =>
+              table.zoneId === state.selectedZoneId && !preset.hiddenTableIds.includes(table.id),
+          );
+          return {
+            layoutPresetId,
+            selectedTableId: replacement?.id ?? state.selectedTableId,
+            notice: replacement
+              ? `That layout hides the selected table. Table ${replacement.displayNumber} is selected instead.`
+              : "That layout has no visible replacement table in this zone.",
+          };
+        }),
       toggleTableFilter: (filter) =>
         set((state) => ({
           tableFilters: state.tableFilters.includes(filter)
@@ -544,6 +661,12 @@ export const useDemoStore = create<DemoStore>()(
           orderState: "awaiting-confirmation",
           notice: "Added to your order",
         }),
+      submitFoodOrder: () =>
+        set((state) =>
+          state.orderItemId
+            ? { orderState: "submitted", notice: "Food order submitted" }
+            : { notice: "Choose a food item before submitting" },
+        ),
       setOrderState: (orderState) =>
         set({ orderState, notice: orderState === "submitted" ? "Order received" : null }),
       setGroupPayment: (groupPayment) =>
@@ -563,6 +686,37 @@ export const useDemoStore = create<DemoStore>()(
           },
           notice: "Drink ready for review",
         })),
+      submitDrinkForReview: () =>
+        set((state) => {
+          const item = drinkItems.find((drink) => drink.id === state.drinkOrder.itemId);
+          if (!item) return { notice: "Choose a drink before submitting" };
+          const drinkState: DrinkOrderState = item.requiresStaffReview
+            ? "staff-review"
+            : "submitted";
+          return {
+            drinkOrder: { ...state.drinkOrder, state: drinkState },
+            staffReview: item.requiresStaffReview,
+            notice: item.requiresStaffReview
+              ? "A team member will confirm supply at your table"
+              : "Drink request submitted",
+          };
+        }),
+      cancelDrinkRequest: () =>
+        set((state) => {
+          if (!["draft", "submitted", "staff-review"].includes(state.drinkOrder.state))
+            return { notice: "Ask a team member about changing this order" };
+          return {
+            drinkOrder: {
+              itemId: null,
+              size: null,
+              participantId: null,
+              tableId: state.selectedTableId,
+              state: "draft",
+            },
+            staffReview: false,
+            notice: "Drink request cancelled",
+          };
+        }),
       setDrinkOrderState: (drinkState) =>
         set((state) => ({
           drinkOrder: { ...state.drinkOrder, state: drinkState },
@@ -585,6 +739,24 @@ export const useDemoStore = create<DemoStore>()(
             ),
           },
         })),
+      respondToOwnRoundItem: (acceptance) =>
+        set((state) => {
+          const participantId = `round-${state.personaId}`;
+          const participant = state.groupRound.participants.find(
+            (item) => item.id === participantId,
+          );
+          if (!participant || !["pending", "accepted", "declined"].includes(participant.acceptance))
+            return { notice: "This item needs venue staff or its assigned participant" };
+          return {
+            groupRound: {
+              ...state.groupRound,
+              participants: state.groupRound.participants.map((item) =>
+                item.id === participantId ? { ...item, acceptance } : item,
+              ),
+            },
+            notice: `Your assigned item is ${acceptance}`,
+          };
+        }),
       setParticipantAcceptance: (participantId, acceptance) =>
         set((state) => ({
           groupRound: {
@@ -599,7 +771,16 @@ export const useDemoStore = create<DemoStore>()(
         set((state) => ({
           groupRound: {
             ...state.groupRound,
-            participants: state.groupRound.participants.map((participant) => ({ ...participant })),
+            addOns: [
+              ...state.groupRound.addOns.filter((item) => item.id !== "round-table-water"),
+              {
+                id: "round-table-water",
+                synthetic: true,
+                name: "Table water",
+                quantity: state.groupRound.participants.length,
+                unitPrice: 0,
+              },
+            ],
           },
           notice: "Water added for everyone",
         })),
@@ -705,7 +886,44 @@ export const useDemoStore = create<DemoStore>()(
             : [...state.soldOutItemIds, itemId],
         })),
       setBottleShopItem: (itemId) =>
-        set((state) => ({ bottleShopCollection: { ...state.bottleShopCollection, itemId } })),
+        set((state) =>
+          ["not-started", "reserved"].includes(state.bottleShopCollection.state)
+            ? {
+                bottleShopCollection: {
+                  ...state.bottleShopCollection,
+                  itemId,
+                  state: "not-started",
+                  token: null,
+                },
+              }
+            : { notice: "Collection preparation has started; ask staff to change the item" },
+        ),
+      reserveBottleShopItem: () =>
+        set((state) =>
+          state.bottleShopCollection.itemId && state.bottleShopCollection.state === "not-started"
+            ? {
+                bottleShopCollection: {
+                  ...state.bottleShopCollection,
+                  state: "reserved",
+                  token: "LOCAL-482",
+                },
+                notice: "Collection reserved for staff preparation",
+              }
+            : { notice: "Choose an available item before reserving" },
+        ),
+      cancelBottleShopCollection: () =>
+        set((state) =>
+          state.bottleShopCollection.state === "reserved"
+            ? {
+                bottleShopCollection: {
+                  ...state.bottleShopCollection,
+                  state: "not-started",
+                  token: null,
+                },
+                notice: "Collection reservation cancelled",
+              }
+            : { notice: "Only a reservation awaiting preparation can be cancelled here" },
+        ),
       setBottleShopState: (collectionState) =>
         set((state) => ({
           bottleShopCollection: {
@@ -718,31 +936,75 @@ export const useDemoStore = create<DemoStore>()(
           },
           notice: `Collection ${collectionState.replaceAll("-", " ")}`,
         })),
-      setPhoneScenario: (phoneScenarioId) => set({ phoneScenarioId, phoneCallState: "incoming" }),
-      setPhoneCallState: (phoneCallState) => set({ phoneCallState }),
-      completePhoneScenario: (createsRide) =>
-        set({
-          phoneCallState: "completed",
-          bookingState: "confirmed",
-          rideBooked: createsRide,
-          rideState: createsRide ? "window-confirmed" : "requested",
-          notice: "Phone plan added to the visit",
+      setPhoneScenario: (phoneScenarioId) =>
+        set({ phoneScenarioId, phoneCallState: "incoming", phoneTranscriptTurnCount: 1 }),
+      setPhoneCallState: (phoneCallState) =>
+        set((state) => {
+          if (phoneCallState === "human-transfer") return { phoneCallState };
+          const scenario = phoneCallScenarios.find((item) => item.id === state.phoneScenarioId);
+          const counts: Partial<Record<PhoneCallState, number>> = {
+            incoming: 1,
+            disclosed: 2,
+            identifying: 3,
+            gathering: 4,
+            confirming: scenario?.turns.length ?? 5,
+            completed: scenario?.turns.length ?? 5,
+          };
+          return {
+            phoneCallState,
+            phoneTranscriptTurnCount: Math.min(
+              scenario?.turns.length ?? 1,
+              counts[phoneCallState] ?? state.phoneTranscriptTurnCount,
+            ),
+          };
+        }),
+      setPhoneTranscriptTurnCount: (phoneTranscriptTurnCount) => set({ phoneTranscriptTurnCount }),
+      completePhoneScenario: (scenario) =>
+        set((state) => {
+          if (scenario.outcome.humanTransfer || !scenario.outcome.booking) {
+            return {
+              phoneCallState: "human-transfer",
+              phoneTranscriptTurnCount: scenario.turns.length,
+              notice: "Transferred to a person without changing the current visit",
+            };
+          }
+          const booking = scenario.outcome.booking;
+          const ride = scenario.outcome.ride;
+          const venue = venues.find((item) => item.id === booking.venueId)!;
+          const zone = venue.zones.find((item) => item.id === booking.zoneId)!;
+          return {
+            venueId: booking.venueId,
+            selectedZoneId: booking.zoneId,
+            selectedTableId: booking.tableId,
+            preferredZone: zone.name,
+            layoutPresetId: booking.layoutPresetId,
+            partySize: booking.partySize,
+            arrivalTime: booking.arrivalTime,
+            bookingState: "confirmed",
+            rideBooked: ride.booked,
+            rideState: ride.booked ? "window-confirmed" : "requested",
+            inboundPassengers: ride.booked ? (ride.inboundPassengers ?? 1) : 0,
+            returnPassengers: ride.booked ? state.returnPassengers : 0,
+            inboundWindow: ride.inboundWindow ?? state.inboundWindow,
+            phoneCallState: "completed",
+            phoneTranscriptTurnCount: scenario.turns.length,
+            notice: "Phone plan added to the visit",
+          };
         }),
       setDrawCountdown: (drawCountdown) => set({ drawCountdown }),
       setFictionalDrawResult: (fictionalDrawResult) => set({ fictionalDrawResult }),
-      startPresentation: () =>
-        set({
-          presentationActive: true,
-          presentationStep: 0,
-          demoOpen: false,
-          notice: "Presentation mode started",
-        }),
-      nextPresentationStep: () =>
-        set((state) => ({ presentationStep: Math.min(15, state.presentationStep + 1) })),
-      previousPresentationStep: () =>
-        set((state) => ({ presentationStep: Math.max(0, state.presentationStep - 1) })),
+      startPresentation: () => set(presentationData(0)),
+      applyPresentationStep: (index) => set(presentationData(index)),
+      nextPresentationStep: () => set((state) => presentationData(state.presentationStep + 1)),
+      previousPresentationStep: () => set((state) => presentationData(state.presentationStep - 1)),
       exitPresentation: () =>
-        set({ presentationActive: false, presentationStep: 0, notice: "Presentation mode closed" }),
+        set({
+          presentationActive: false,
+          presentationStep: 0,
+          serviceOpen: false,
+          phoneOpen: false,
+          notice: "Presentation mode closed",
+        }),
       updateMemory: (id, value) =>
         set((state) => ({
           memories: {
@@ -798,7 +1060,7 @@ export const useDemoStore = create<DemoStore>()(
     }),
     {
       name: "star-local-demo-v1",
-      version: 2,
+      version: 3,
       migrate: (persistedState, version) => migrateDemoState(persistedState, version),
       partialize: (state) => ({
         ...state,

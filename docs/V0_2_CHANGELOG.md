@@ -1,5 +1,16 @@
 # v0.2 changelog
 
+## v0.2.1 immersion and state-authority correction
+
+- Removed presenter-only drink decisions, participant operational states, Table Service progression and bottle-shop preparation progression from customer screens; added complete operational controls to Demo Controls.
+- Rebuilt phone scenarios as ordered turns plus a structured outcome shared by the displayed summary and state mutation. Harbour and UFC calls now write their full venue, zone, table, party, arrival, layout and ride outcome; allergy calls preserve the visit and transcript while transferring to a person.
+- Made presentation setup executable and deterministic, including automatic Table Service and Phone Receptionist opening and feature preloads for drink, screen, phone audio and venue-switch steps.
+- Rendered joined-table presets with a shared boundary, combined capacity and individually identifiable tables; hidden selected tables now receive a safe visible-table fallback.
+- Stored “Add water for everyone” as a real zero-cost group add-on visible across round, order and progress views.
+- Expanded Home next-action inputs and priority across booking validity, venue transport capability, visit stage, group/order, screen, return ride and service state.
+- Added reusable focus entry, trapping, background inertness and trigger restoration to all dialogs, with guarded dismissal for urgent assistance.
+- Added regression coverage for customer/presenter authority, structured phone outcomes, transcript preservation, presentation setup, joined layouts, hidden-table fallback, water state, Home priority and dialog focus.
+
 ## Customer experience
 
 - Added rich venue-zone selection and zone-aware table choice.
@@ -17,7 +28,7 @@
 
 - Extended strict domain types for zones, layouts, entertainment, drink review, service, marketing, calls, collection and presentation.
 - Split fixtures into focused domains and expanded cross-reference validation.
-- Added persistence version 2 with a safe v0.1 migration on the existing key.
+- Added persistence version 3 with safe migration on the existing key.
 - Added nested routes and lazy page chunks while keeping global service surfaces mounted.
 - Added unit coverage for fixture and transition rules and Playwright coverage for the principal v0.2 journeys on mobile and desktop.
 - Kept the GitHub Pages base and deployment workflow unchanged.
@@ -31,4 +42,4 @@
 
 ## Compatibility
 
-Persisted v0.1 browsers migrate automatically. To reset manually, choose **Reset demo** or delete `star-local-demo-v1` from localStorage and reload.
+Persisted v0.1 and v0.2 browsers migrate automatically. To reset manually, choose **Reset demo** in Demo Controls or delete `star-local-demo-v1` from localStorage and reload.

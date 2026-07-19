@@ -2,19 +2,12 @@ import { CheckCircle2, Droplets, UserCheck, UsersRound, Utensils } from "lucide-
 import { Badge, Button, Card, SectionHeading } from "../../components/ui";
 import { demoRepository } from "../../services/demoRepository";
 import { useDemoStore } from "../../state/demoStore";
-import type { ParticipantAcceptance } from "../../types/domain";
 
 export function GroupRoundOrder() {
   const state = useDemoStore();
   const drinks = demoRepository.getDrinks(state.venueId);
   const available = drinks.filter((item) => item.stock !== "sold-out");
-  const statusOptions: Array<[ParticipantAcceptance, string]> = [
-    ["accepted", "Accept"],
-    ["declined", "Decline"],
-    ["staff-order", "Staff order"],
-    ["age-check", "Age check"],
-    ["delivered", "Delivered"],
-  ];
+  const currentParticipantId = `round-${state.personaId}`;
 
   return (
     <div className="order-section-stack">
@@ -82,23 +75,47 @@ export function GroupRoundOrder() {
                   </small>
                 </p>
               ) : null}
-              <div className="acceptance-actions">
-                {statusOptions.map(([id, label]) => (
+              {participant.id === currentParticipantId ? (
+                <div className="acceptance-actions" aria-label="Respond to your assigned item">
                   <button
-                    key={id}
                     type="button"
-                    aria-pressed={participant.acceptance === id}
-                    onClick={() => state.setParticipantAcceptance(participant.id, id)}
+                    aria-pressed={participant.acceptance === "accepted"}
+                    onClick={() => state.respondToOwnRoundItem("accepted")}
                   >
-                    {id === "accepted" ? <UserCheck size={14} /> : null}
-                    {label}
+                    <UserCheck size={14} />
+                    Accept my item
                   </button>
-                ))}
-              </div>
+                  <button
+                    type="button"
+                    aria-pressed={participant.acceptance === "declined"}
+                    onClick={() => state.respondToOwnRoundItem("declined")}
+                  >
+                    Decline my item
+                  </button>
+                </div>
+              ) : (
+                <p className="participant-authority-note">
+                  {participant.name} controls their response. Venue progress is
+                  presenter-controlled.
+                </p>
+              )}
             </Card>
           );
         })}
       </div>
+      {state.groupRound.addOns.length ? (
+        <Card className="round-addons" aria-live="polite">
+          <SectionHeading title="Round add-ons" />
+          {state.groupRound.addOns.map((addOn) => (
+            <div className="receipt-line" key={addOn.id}>
+              <span>
+                {addOn.quantity} × {addOn.name}
+              </span>
+              <strong>${(addOn.quantity * addOn.unitPrice).toFixed(2)}</strong>
+            </div>
+          ))}
+        </Card>
+      ) : null}
       <Card>
         <SectionHeading title="Round actions" />
         <div className="round-actions">
@@ -106,7 +123,7 @@ export function GroupRoundOrder() {
             <Droplets size={17} />
             Add water for everyone
           </Button>
-          <Button variant="secondary" onClick={() => state.setServiceOpen(true)}>
+          <Button variant="secondary" onClick={() => state.requestService("Speak to staff")}>
             Ask staff
           </Button>
           <Button

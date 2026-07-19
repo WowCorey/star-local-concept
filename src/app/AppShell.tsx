@@ -91,7 +91,7 @@ export function AppShell() {
           <button type="button" onClick={startPresentation}>
             Start Presentation
           </button>
-          <button type="button" onClick={() => setPhoneOpen(true)}>
+          <button type="button" data-dialog-trigger="phone" onClick={() => setPhoneOpen(true)}>
             Simulate phone booking
           </button>
         </div>
@@ -126,6 +126,7 @@ export function AppShell() {
           <button
             className="demo-trigger"
             type="button"
+            data-dialog-trigger="demo"
             onClick={() => setDemoOpen(true)}
             aria-haspopup="dialog"
           >
@@ -140,7 +141,7 @@ export function AppShell() {
             <p>
               No live bookings, payments, venue systems, transport tracking or gaming connections.
             </p>
-            <button type="button" onClick={() => setDemoOpen(true)}>
+            <button type="button" data-dialog-trigger="demo" onClick={() => setDemoOpen(true)}>
               Project disclaimer & demo controls
             </button>
           </footer>
@@ -149,6 +150,7 @@ export function AppShell() {
         <button
           className="ask-star-fab"
           type="button"
+          data-dialog-trigger="assistant"
           onClick={() => setAssistantOpen(true)}
           aria-haspopup="dialog"
         >
@@ -159,6 +161,7 @@ export function AppShell() {
           <button
             className="table-service-fab"
             type="button"
+            data-dialog-trigger="service"
             onClick={() => setServiceOpen(true)}
             aria-haspopup="dialog"
           >

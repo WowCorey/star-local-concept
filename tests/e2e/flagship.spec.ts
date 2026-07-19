@@ -33,7 +33,7 @@ test("flagship Thursday journey completes and resets", async ({ page }) => {
 
   await page.getByRole("link", { name: "Visit" }).click();
   await page.getByRole("button", { name: "Request the Cowboys game" }).click();
-  await expect(page.getByText("Request approved", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Request sent.*venue staff controls approval/)).toBeVisible();
 
   await page.getByRole("link", { name: "Rewards" }).click();
   await expect(page.getByText("DEMO-10482")).toBeVisible();
@@ -47,6 +47,7 @@ test("flagship Thursday journey completes and resets", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Harbour Family Hotel - Thursday evenings")).toBeVisible();
 
+  await page.getByRole("button", { name: "Demo Controls", exact: true }).click();
   await page.getByRole("button", { name: "Reset demo" }).click();
   await page.getByRole("link", { name: "Home" }).click();
   await expect(page.getByRole("heading", { name: "Good evening, Alex" })).toBeVisible();

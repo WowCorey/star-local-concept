@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowRight, Bot, MapPin, Send, ShieldCheck, UserRound, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "../../components/ui";
 import { demoRepository } from "../../services/demoRepository";
 import { useDemoStore } from "../../state/demoStore";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 import { matchIntent, type AssistantIntent } from "./intents";
 
 const prompts = [
@@ -33,15 +34,15 @@ export function AssistantSheet() {
   const [input, setInput] = useState("");
   const [result, setResult] = useState<Result | null>(null);
   const state = useDemoStore();
+  const dialogRef = useRef<HTMLElement>(null);
   const persona = demoRepository.getPersona(state.personaId);
   const venue = demoRepository.getVenue(state.venueId);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) =>
-      event.key === "Escape" && state.setAssistantOpen(false);
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [state]);
+  useDialogFocus({
+    dialogRef,
+    onRequestClose: () => state.setAssistantOpen(false),
+    restoreFocusSelector: "[data-dialog-trigger='assistant']",
+  });
 
   const buildResult = (text: string): Result => {
     const intent = matchIntent(text);
@@ -331,7 +332,14 @@ export function AssistantSheet() {
       role="presentation"
       onMouseDown={(event) => event.currentTarget === event.target && state.setAssistantOpen(false)}
     >
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="assistant-title">
+      <section
+        ref={dialogRef}
+        className="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="assistant-title"
+        tabIndex={-1}
+      >
         <header className="sheet-header">
           <div>
             <p className="eyebrow">Local coordination assistant</p>

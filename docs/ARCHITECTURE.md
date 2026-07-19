@@ -2,7 +2,7 @@
 
 ## Runtime boundary
 
-Star Local v0.2 is a static, browser-only React application:
+Star Local v0.2.1 is a static, browser-only React application:
 
 ```text
 AppShell
@@ -43,13 +43,15 @@ Pages query fixtures through `demoRepository`; they do not embed authoritative a
 
 `demoStore.ts` models visit, booking, table, layout, ride, food, drink review, group acceptance, screen request, phone audio, service request, marketing, collection, phone call, rewards and presentation state as named TypeScript unions.
 
-The persistence key intentionally stays `star-local-demo-v1` so existing browsers can upgrade in place. Zustand persistence version `2` runs `migrateDemoState`, which:
+The persistence key intentionally stays `star-local-demo-v1` so existing browsers can upgrade in place. Zustand persistence version `3` runs `migrateDemoState`, which:
 
 1. starts from the complete v0.2 defaults;
 2. preserves recognised v0.1 values;
 3. derives the correct venue zone, table and layout where older fields are missing;
 4. merges nested drink, collection and preference records; and
 5. clears transient sheets and notices so hydration cannot trap the interface.
+
+Migration also validates the selected table against the selected zone and active layout preset. If a preset hides it, the first visible table in that zone becomes the discreetly announced fallback.
 
 Unknown or missing records fall back to synthetic defaults. Reset rebuilds the full initial object.
 
@@ -64,6 +66,16 @@ Unknown or missing records fall back to synthetic defaults. Reset rebuilds the f
 - Group-round items are assigned to identified synthetic participants with independent acceptance states.
 - Table Service maps request kinds to venue-function fixtures such as Bistro Team or Duty Manager.
 - The simulated telephone receptionist writes a confirmed booking and optional ride into the same store; serious-allergy questions enter `human-transfer`.
+
+## Customer and presenter authority
+
+Customer surfaces expose intent only: request, submit, cancel before preparation, choose an alternative, acknowledge the current participant's assigned item, or ask for a person. They do not expose transitions that claim venue approval, age confirmation, preparation, delivery, staff acceptance or arrival, collection readiness or completion, or television approval.
+
+Operational transitions live in Demo Controls and presentation presets. This is an explicit prototype authority boundary: the customer creates or withdraws a request, while the presenter simulates the venue response. Store transition helpers used by Demo Controls are not presented as customer capabilities.
+
+Phone scenarios contain ordered speaker turns and one structured outcome. Both the confirmation summary and the completed booking, table, layout and ride mutation read from that outcome, so displayed and written state cannot drift. A human transfer retains the transcript and does not mutate the visit.
+
+Ask Star, Demo Controls, Table Service and Phone Receptionist share one modal-focus implementation. It moves focus into the dialog, traps focus, makes the background inert, closes non-urgent dialogs with Escape and restores the trigger. Urgent assistance requires an explicit acknowledgement before its view closes.
 
 ## Performance and dependencies
 

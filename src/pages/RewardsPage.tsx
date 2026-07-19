@@ -9,6 +9,7 @@ import {
   Ticket,
   Trophy,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge, Button, Card, PageIntro, SectionHeading } from "../components/ui";
 import { demoRepository } from "../services/demoRepository";
 import { useDemoStore } from "../state/demoStore";
@@ -148,9 +149,9 @@ export function RewardsPage() {
             </span>
             <h3>Thursday visit receipt</h3>
             <p>Food, drink and voucher summary available after the visit.</p>
-            <Button variant="secondary" onClick={() => state.setStage("after-visit")}>
+            <Link className="button button-secondary" to="/me/receipts">
               View post-visit mode
-            </Button>
+            </Link>
           </Card>
         </div>
       </section>

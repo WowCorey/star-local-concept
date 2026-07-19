@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { CheckCircle2, Clock3, MessageSquareText, UserRound, X } from "lucide-react";
 import { Badge, Button } from "../../components/ui";
 import { getServiceTeam } from "../v02/model";
 import { useDemoStore } from "../../state/demoStore";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 
 const serviceKinds = [
   "Water",
@@ -24,22 +25,37 @@ const serviceKinds = [
 export function TableServiceSheet() {
   const state = useDemoStore();
   const [note, setNote] = useState(state.serviceRequest?.note ?? "");
+  const [dismissWarning, setDismissWarning] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) =>
-      event.key === "Escape" && state.setServiceOpen(false);
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [state]);
+  const requestClose = () => {
+    if (state.serviceRequest?.urgent) {
+      setDismissWarning(true);
+      return;
+    }
+    state.setServiceOpen(false);
+  };
+  useDialogFocus({
+    dialogRef,
+    onRequestClose: requestClose,
+    restoreFocusSelector: "[data-dialog-trigger='service']",
+  });
 
   const team = state.serviceRequest ? getServiceTeam(state.serviceRequest.kind) : null;
   return (
     <div
       className="overlay"
       role="presentation"
-      onMouseDown={(event) => event.currentTarget === event.target && state.setServiceOpen(false)}
+      onMouseDown={(event) => event.currentTarget === event.target && requestClose()}
     >
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="service-title">
+      <section
+        ref={dialogRef}
+        className="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="service-title"
+        tabIndex={-1}
+      >
         <header className="sheet-header">
           <div>
             <p className="eyebrow">In-venue help</p>
@@ -48,13 +64,22 @@ export function TableServiceSheet() {
           <button
             className="icon-button"
             type="button"
-            onClick={() => state.setServiceOpen(false)}
+            onClick={requestClose}
             aria-label="Close Table Service"
           >
             <X size={21} />
           </button>
         </header>
         <div className="sheet-stack">
+          {dismissWarning ? (
+            <div className="safety-strip" role="alert">
+              <strong>Urgent request remains active</strong>
+              <span>Closing this view does not cancel the request. Alert nearby staff now.</span>
+              <Button variant="secondary" onClick={() => state.setServiceOpen(false)}>
+                Close view and keep request active
+              </Button>
+            </div>
+          ) : null}
           {state.serviceRequest ? (
             <div className="service-live" aria-live="polite">
               <div className="service-live-heading">
@@ -77,16 +102,20 @@ export function TableServiceSheet() {
                   {state.serviceRequest.note}
                 </p>
               ) : null}
-              {state.serviceRequest.state !== "completed" ? (
-                <Button full onClick={state.advanceServiceRequest}>
-                  Advance response
-                </Button>
-              ) : (
+              {state.serviceRequest.state === "completed" ? (
                 <div className="success-panel">
                   <CheckCircle2 size={21} />
                   <span>
                     <strong>Completed</strong>
                     <small>You can create another request if needed.</small>
+                  </span>
+                </div>
+              ) : (
+                <div className="info-strip">
+                  <Clock3 size={19} />
+                  <span>
+                    Venue staff controls acceptance and arrival updates. This view follows the
+                    request.
                   </span>
                 </div>
               )}

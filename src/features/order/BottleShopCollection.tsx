@@ -2,24 +2,12 @@ import { CheckCircle2, PackageCheck, ShoppingBag, UserCheck } from "lucide-react
 import { Badge, Button, Card, SectionHeading } from "../../components/ui";
 import { demoRepository } from "../../services/demoRepository";
 import { useDemoStore } from "../../state/demoStore";
-import type { BottleShopCollectionState } from "../../types/domain";
-
-const sequence: BottleShopCollectionState[] = [
-  "not-started",
-  "reserved",
-  "preparing",
-  "ready",
-  "collected",
-];
 
 export function BottleShopCollection() {
   const state = useDemoStore();
   const venue = demoRepository.getVenue(state.venueId);
   const items = demoRepository.getBottleShop(state.venueId);
   const selected = items.find((item) => item.id === state.bottleShopCollection.itemId);
-  const index = sequence.indexOf(state.bottleShopCollection.state);
-  const advance = () =>
-    state.setBottleShopState(sequence[Math.min(sequence.length - 1, index + 1)]!);
 
   if (!venue.services.bottleShopPickup) {
     return (
@@ -60,6 +48,9 @@ export function BottleShopCollection() {
             <span>Pickup window</span>
             <select
               value={state.bottleShopCollection.pickupWindow}
+              disabled={["preparing", "ready", "collected"].includes(
+                state.bottleShopCollection.state,
+              )}
               onChange={(event) =>
                 useDemoStore.setState({
                   bottleShopCollection: {
@@ -97,12 +88,22 @@ export function BottleShopCollection() {
                 <small>Customer-initiated flow complete.</small>
               </span>
             </div>
-          ) : (
-            <Button full onClick={advance}>
-              {state.bottleShopCollection.state === "not-started"
-                ? "Reserve item"
-                : `Advance to ${sequence[Math.min(sequence.length - 1, index + 1)]?.replaceAll("-", " ")}`}
+          ) : state.bottleShopCollection.state === "not-started" ? (
+            <Button full onClick={state.reserveBottleShopItem}>
+              Reserve item
             </Button>
+          ) : state.bottleShopCollection.state === "reserved" ? (
+            <Button variant="ghost" full onClick={state.cancelBottleShopCollection}>
+              Cancel collection reservation
+            </Button>
+          ) : (
+            <div className="info-strip" aria-live="polite">
+              <PackageCheck size={19} />
+              <span>
+                Venue staff controls preparation, ready and collection confirmation. You can view
+                progress here.
+              </span>
+            </div>
           )}
         </Card>
       ) : null}
@@ -118,7 +119,14 @@ export function BottleShopCollection() {
               <h3>{item.name}</h3>
               <p>{item.description}</p>
               <strong>${item.memberPrice.toFixed(2)} member price</strong>
-              <Button variant="secondary" full onClick={() => state.setBottleShopItem(item.id)}>
+              <Button
+                variant="secondary"
+                full
+                disabled={["preparing", "ready", "collected"].includes(
+                  state.bottleShopCollection.state,
+                )}
+                onClick={() => state.setBottleShopItem(item.id)}
+              >
                 Select
               </Button>
             </Card>

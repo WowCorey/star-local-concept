@@ -43,15 +43,23 @@ test("Alex orders food and a controlled drink", async ({ page }) => {
 test("Alex creates a participant-controlled group round", async ({ page }) => {
   await page.goto("./#/order/group");
   await page.getByLabel("Item for Jordan").selectOption("harbour-zero-lager");
-  await page
+  const jordan = page
     .getByRole("article")
-    .filter({ hasText: "Jordan" })
-    .getByRole("button", { name: "Accept" })
-    .click();
-  await expect(
-    page.getByRole("article").filter({ hasText: "Jordan" }).getByText("accepted", { exact: true }),
-  ).toBeVisible();
+    .filter({ has: page.getByRole("heading", { name: "Jordan" }) });
+  await expect(jordan.getByRole("button", { name: /Accept my item|Decline my item/ })).toHaveCount(
+    0,
+  );
+  const alex = page
+    .getByRole("article")
+    .filter({ has: page.getByRole("heading", { name: "Alex" }) });
+  await alex.getByRole("button", { name: "Decline my item" }).click();
+  await expect(alex.getByText("declined", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: /Add water for everyone/ }).click();
+  await expect(page.getByText(/4 .*Table water/)).toBeVisible();
+  await expect(page.getByText("$0.00")).toBeVisible();
+  await page.getByRole("link", { name: "My order" }).click();
+  await expect(page.getByText(/4 .*Table water/)).toBeVisible();
+  await expect(page.getByText("Group add-on subtotal $0.00")).toBeVisible();
 });
 
 test("Alex requests Screen 7", async ({ page }) => {
@@ -68,7 +76,7 @@ test("Alex activates and pauses phone audio", async ({ page }) => {
   await expect(page.getByText("paused", { exact: true })).toBeVisible();
 });
 
-test("Alex creates and completes a Table Service request", async ({ page }) => {
+test("Alex creates but cannot complete a Table Service request", async ({ page }) => {
   await page.goto("./#/visit");
   await page.getByRole("button", { name: "Check in at Table 23" }).click();
   await page.getByRole("button", { name: "Table Service" }).click();
@@ -76,11 +84,9 @@ test("Alex creates and completes a Table Service request", async ({ page }) => {
   await expect(
     page.getByRole("dialog", { name: "Table Service" }).getByText("Bistro Team", { exact: true }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Advance response" }).click();
-  await page.getByRole("button", { name: "Advance response" }).click();
-  await page.getByRole("button", { name: "Advance response" }).click();
+  await expect(page.getByRole("button", { name: "Advance response" })).toHaveCount(0);
   await expect(
-    page.getByRole("dialog", { name: "Table Service" }).getByText("Completed", { exact: true }),
+    page.getByRole("dialog", { name: "Table Service" }).getByText("requested", { exact: true }),
   ).toBeVisible();
 });
 
@@ -92,6 +98,17 @@ test("phone receptionist creates a booking and bus request", async ({ page }) =>
     await page.getByRole("button", { name: /Continue call/ }).click();
   await expect(page.getByText("Visit plan created")).toBeVisible();
   await expect(page.getByText("Bistro Table 23")).toBeVisible();
+});
+
+test("allergy transfer keeps the ordered transcript visible", async ({ page }) => {
+  await page.getByRole("button", { name: "Demo Controls", exact: true }).click();
+  await page.getByRole("button", { name: /Phone reception/ }).click();
+  await page.getByLabel("Call scenario").selectOption("call-allergy");
+  for (let index = 0; index < 3; index += 1)
+    await page.getByRole("button", { name: /Continue call/ }).click();
+  await expect(page.getByText("I have a serious allergy question.")).toBeVisible();
+  await expect(page.getByText(/I won't guess about allergy safety/)).toBeVisible();
+  await expect(page.getByText("Transferring to a person.", { exact: true })).toBeVisible();
 });
 
 test("Jordan completes the UFC venue journey", async ({ page }) => {
@@ -119,16 +136,43 @@ test("Taylor completes accessibility and bottle-shop collection", async ({ page 
     .click();
   await page.getByRole("button", { name: "Reserve item" }).click();
   await expect(page.getByText("LOCAL-482")).toBeVisible();
+  await expect(page.getByText("reserved", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: /Advance to preparing|Mark (ready|prepared|collected)|Collection ready/i,
+    }),
+  ).toHaveCount(0);
+});
+
+test("joined presets show one group boundary while keeping tables identifiable", async ({
+  page,
+}) => {
+  await page.goto("./#/visit/floor-plan");
+  await expect(page.getByRole("group", { name: /Joined group: Tables 22 and 23/ })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Table 22,.*individually selectable/ }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Table 23,.*individually selectable/ }),
+  ).toBeVisible();
 });
 
 test("presentation mode completes its full sequence", async ({ page }) => {
   await page.getByRole("button", { name: "Demo Controls", exact: true }).click();
   await page
-    .getByRole("dialog", { name: "Demo Controls v0.2" })
+    .getByRole("dialog", { name: "Demo Controls v0.2.1" })
     .getByRole("button", { name: "Start presentation", exact: true })
     .click();
   await expect(page.getByLabel("Guided presentation mode")).toContainText("Step 1 of 16");
-  for (let index = 0; index < 15; index += 1)
+  for (let index = 0; index < 8; index += 1)
+    await page.getByRole("button", { name: "Next presentation step" }).click();
+  await expect(page.getByRole("dialog", { name: "Table Service" })).toBeVisible();
+  await page.getByRole("button", { name: "Close Table Service" }).click();
+  for (let index = 0; index < 3; index += 1)
+    await page.getByRole("button", { name: "Next presentation step" }).click();
+  await expect(page.getByRole("dialog", { name: "AI telephone receptionist" })).toBeVisible();
+  await page.getByRole("button", { name: "Close phone simulation" }).click();
+  for (let index = 0; index < 4; index += 1)
     await page.getByRole("button", { name: "Next presentation step" }).click();
   await expect(page.getByLabel("Guided presentation mode")).toContainText("Step 16 of 16");
   await expect(page.getByLabel("Guided presentation mode")).toContainText("Bottle-shop collection");

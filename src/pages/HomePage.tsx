@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge, Button, Card, SectionHeading, StatusDot } from "../components/ui";
-import { getHomeNextAction } from "../features/v02/model";
+import { applyLayoutPreset, getHomeNextAction } from "../features/v02/model";
 import { demoRepository } from "../services/demoRepository";
 import { useDemoStore } from "../state/demoStore";
 
@@ -57,7 +57,25 @@ export function HomePage() {
   const bookingConfirmed = ["confirmed", "changed", "checked-in", "completed"].includes(
     state.bookingState,
   );
-  const next = getHomeNextAction(state);
+  const next = getHomeNextAction({
+    bookingState: state.bookingState,
+    selectedZoneId: state.selectedZoneId,
+    selectedTableValid: Boolean(
+      table &&
+      table.zoneId === state.selectedZoneId &&
+      applyLayoutPreset(table, state.layoutPresetId),
+    ),
+    courtesyBus: venue.services.courtesyBus,
+    stage: state.stage,
+    rideBooked: state.rideBooked,
+    orderState: state.orderState,
+    groupParticipantStates: state.groupRound.participants.map(
+      (participant) => participant.acceptance,
+    ),
+    screenRequestState: state.screenRequestState,
+    returnPassengers: state.returnPassengers,
+    serviceRequestState: state.serviceRequestState,
+  });
 
   const confirm = async () => {
     setConfirming(true);
@@ -302,7 +320,12 @@ export function HomePage() {
           <strong>Ride home</strong>
           <small>{venue.services.courtesyBus ? state.returnWindow : "Ask staff"}</small>
         </Link>
-        <button className="quick-action" type="button" onClick={() => state.setServiceOpen(true)}>
+        <button
+          className="quick-action"
+          type="button"
+          data-dialog-trigger="service"
+          onClick={() => state.setServiceOpen(true)}
+        >
           <span>
             <Utensils size={20} />
           </span>

@@ -215,9 +215,9 @@ export function MePage() {
           <li>No gaming controls or recommendation data</li>
           <li>All members, venues, products and states are synthetic</li>
         </ul>
-        <Button variant="ghost" full onClick={state.resetDemo}>
-          Reset demo
-        </Button>
+        <p className="microcopy">
+          Presenter state and scenario resets are available only in Demo Controls.
+        </p>
       </Card>
     </div>
   );

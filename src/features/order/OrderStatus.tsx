@@ -10,11 +10,16 @@ export function OrderStatus() {
   const food = menu.find((item) => item.id === state.orderItemId);
   const drink = drinks.find((item) => item.id === state.drinkOrder.itemId);
   const drinkPrice = drink?.sizes.find((size) => size.label === state.drinkOrder.size)?.price ?? 0;
-  const subtotal = (food?.price ?? 0) + drinkPrice;
+  const addOnSubtotal = state.groupRound.addOns.reduce(
+    (sum, addOn) => sum + addOn.quantity * addOn.unitPrice,
+    0,
+  );
+  const subtotal = (food?.price ?? 0) + drinkPrice + addOnSubtotal;
   const saving = subtotal ? 5 : 0;
   const total = Math.max(0, subtotal - saving);
-  const steps = [
+  const steps: Array<[string, boolean]> = [
     ["Order received", state.orderState !== "draft"],
+    ...(state.groupRound.addOns.length ? [["Table water added", true] as [string, boolean]] : []),
     [
       "Kitchen preparing",
       ["submitted", "preparing", "ready", "delivered"].includes(state.orderState),
@@ -28,7 +33,7 @@ export function OrderStatus() {
     ["Food ready", ["ready", "delivered"].includes(state.orderState)],
     ["Drinks delivered", state.drinkOrder.state === "delivered"],
     ["Order complete", state.orderState === "delivered" && state.drinkOrder.state === "delivered"],
-  ] as const;
+  ];
   return (
     <div className="order-section-stack">
       <Card className="combined-order">
@@ -72,6 +77,15 @@ export function OrderStatus() {
         ) : (
           <p>No drink added yet.</p>
         )}
+        {state.groupRound.addOns.map((addOn) => (
+          <div className="receipt-line" key={addOn.id}>
+            <span>
+              {addOn.quantity} × {addOn.name}
+              <small>Group add-on subtotal ${addOnSubtotal.toFixed(2)}</small>
+            </span>
+            <strong>${(addOn.quantity * addOn.unitPrice).toFixed(2)}</strong>
+          </div>
+        ))}
         <dl className="order-totals">
           <div>
             <dt>Subtotal</dt>
@@ -137,7 +151,12 @@ export function OrderStatus() {
         </div>
         <p className="microcopy">Prototype interaction only. No payment or charge occurs.</p>
       </Card>
-      <Button variant="secondary" full onClick={() => state.setServiceOpen(true)}>
+      <Button
+        variant="secondary"
+        full
+        data-dialog-trigger="service"
+        onClick={() => state.setServiceOpen(true)}
+      >
         <Utensils size={17} />
         Report an order issue
       </Button>

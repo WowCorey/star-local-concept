@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { matchIntent } from "../assistant/intents";
 import { demoRepository } from "../../services/demoRepository";
+import { phoneCallScenarios } from "../../fixtures/operations";
 import { initialData, migrateDemoState, useDemoStore } from "../../state/demoStore";
 import {
   applyLayoutPreset,
@@ -117,24 +118,54 @@ describe("Star Local v0.2 operating model", () => {
   it("selects a dynamic Home next action", () => {
     expect(
       getHomeNextAction({
+        bookingState: "held",
+        selectedZoneId: "harbour-bistro",
+        selectedTableValid: true,
+        courtesyBus: true,
         stage: "before-visit",
         rideBooked: false,
         orderState: "draft",
+        groupParticipantStates: ["pending"],
         screenRequestState: "idle",
         returnPassengers: 0,
         serviceRequestState: null,
       }),
-    ).toEqual({ label: "Plan a safe ride", route: "/ride" });
+    ).toEqual({ label: "Confirm your visit", route: "/visit" });
     expect(
       getHomeNextAction({
+        bookingState: "confirmed",
+        selectedZoneId: "harbour-bistro",
+        selectedTableValid: true,
+        courtesyBus: true,
         stage: "in-venue",
         rideBooked: true,
         orderState: "draft",
+        groupParticipantStates: ["accepted"],
         screenRequestState: "idle",
         returnPassengers: 6,
         serviceRequestState: null,
       }).route,
     ).toBe("/order/group");
+  });
+
+  it("uses safe-travel wording without outranking a no-bus venue booking", () => {
+    const base = {
+      selectedZoneId: "north-sports",
+      selectedTableValid: true,
+      courtesyBus: false,
+      stage: "before-visit" as const,
+      rideBooked: false,
+      orderState: "submitted" as const,
+      groupParticipantStates: ["accepted" as const],
+      screenRequestState: "active" as const,
+      returnPassengers: 0,
+      serviceRequestState: null,
+    };
+    expect(getHomeNextAction({ ...base, bookingState: "held" }).label).toBe("Confirm your visit");
+    expect(getHomeNextAction({ ...base, bookingState: "confirmed" })).toEqual({
+      label: "Review safe travel options",
+      route: "/ride",
+    });
   });
 
   it("matches the new structured Ask Star workflows", () => {
@@ -145,13 +176,62 @@ describe("Star Local v0.2 operating model", () => {
     expect(matchIntent("Can I listen to Screen 7?")).toBe("listen-screen");
   });
 
-  it("creates booking and ride state from the phone scenario", () => {
-    useDemoStore.getState().completePhoneScenario(true);
+  it("writes the complete Harbour phone outcome into visit and ride state", () => {
+    useDemoStore.getState().completePhoneScenario(phoneCallScenarios[0]!);
     expect(useDemoStore.getState()).toMatchObject({
       phoneCallState: "completed",
+      venueId: "harbour",
+      selectedZoneId: "harbour-bistro",
+      selectedTableId: "table-23",
+      layoutPresetId: "thursday-draw",
+      partySize: 6,
+      arrivalTime: "6:45 pm",
       bookingState: "confirmed",
       rideBooked: true,
+      inboundPassengers: 2,
+      inboundWindow: "6:15 pm - 6:45 pm",
     });
+  });
+
+  it("writes the complete UFC phone outcome without a courtesy-bus booking", () => {
+    useDemoStore.getState().completePhoneScenario(phoneCallScenarios[1]!);
+    expect(useDemoStore.getState()).toMatchObject({
+      phoneCallState: "completed",
+      venueId: "northside",
+      selectedZoneId: "north-sports",
+      selectedTableId: "north-12",
+      layoutPresetId: "ufc-night",
+      partySize: 4,
+      arrivalTime: "7:30 pm",
+      bookingState: "confirmed",
+      rideBooked: false,
+      inboundPassengers: 0,
+    });
+  });
+
+  it("preserves visit state and the shown transcript during an allergy transfer", () => {
+    useDemoStore.setState({
+      venueId: "hinterland",
+      selectedZoneId: "hinterland-dining",
+      selectedTableId: "hinterland-4",
+      bookingState: "checked-in",
+      partySize: 3,
+      phoneTranscriptTurnCount: 3,
+    });
+    const before = useDemoStore.getState();
+    const allergy = phoneCallScenarios[2]!;
+    useDemoStore.getState().completePhoneScenario(allergy);
+    expect(useDemoStore.getState()).toMatchObject({
+      venueId: before.venueId,
+      selectedZoneId: before.selectedZoneId,
+      selectedTableId: before.selectedTableId,
+      bookingState: before.bookingState,
+      partySize: before.partySize,
+      phoneCallState: "human-transfer",
+      phoneTranscriptTurnCount: allergy.turns.length,
+    });
+    useDemoStore.getState().setPhoneCallState("human-transfer");
+    expect(useDemoStore.getState().phoneTranscriptTurnCount).toBe(allergy.turns.length);
   });
 
   it("supports marketing explanation and dismissal", () => {
@@ -179,6 +259,66 @@ describe("Star Local v0.2 operating model", () => {
     });
     useDemoStore.getState().previousPresentationStep();
     expect(useDemoStore.getState().presentationStep).toBe(0);
+  });
+
+  it("executes Table Service and Phone Receptionist presentation setup", () => {
+    useDemoStore.getState().applyPresentationStep(6);
+    expect(useDemoStore.getState().drinkOrder).toMatchObject({
+      itemId: "harbour-lager",
+      state: "staff-review",
+    });
+    expect(
+      useDemoStore
+        .getState()
+        .groupRound.participants.find((participant) => participant.id === "round-alex")?.acceptance,
+    ).toBe("age-check");
+    useDemoStore.getState().applyPresentationStep(7);
+    expect(useDemoStore.getState()).toMatchObject({
+      screenRequestScreenId: "screen-7",
+      screenRequestState: "requested",
+      phoneAudioState: "active",
+      phoneAudioScreenId: "screen-7",
+    });
+    useDemoStore.getState().applyPresentationStep(8);
+    expect(useDemoStore.getState()).toMatchObject({
+      presentationStep: 8,
+      serviceOpen: true,
+      phoneOpen: false,
+    });
+    useDemoStore.getState().applyPresentationStep(11);
+    expect(useDemoStore.getState()).toMatchObject({
+      venueId: "harbour",
+      presentationStep: 11,
+      serviceOpen: false,
+      phoneOpen: true,
+      phoneScenarioId: "call-usual",
+    });
+    useDemoStore.getState().applyPresentationStep(12);
+    expect(useDemoStore.getState().venueId).toBe("northside");
+    useDemoStore.getState().previousPresentationStep();
+    expect(useDemoStore.getState()).toMatchObject({
+      venueId: "harbour",
+      presentationStep: 11,
+      phoneOpen: true,
+    });
+  });
+
+  it("replaces a selected table when a preset hides it", () => {
+    useDemoStore.getState().selectTable("table-18");
+    useDemoStore.getState().setLayoutPreset("large-birthday");
+    expect(useDemoStore.getState().selectedTableId).not.toBe("table-18");
+    expect(useDemoStore.getState().notice).toContain("selected instead");
+  });
+
+  it("adds a zero-cost water assignment for every participant", () => {
+    useDemoStore.getState().addWaterForEveryone();
+    expect(useDemoStore.getState().groupRound.addOns).toContainEqual({
+      id: "round-table-water",
+      synthetic: true,
+      name: "Table water",
+      quantity: 4,
+      unitPrice: 0,
+    });
   });
 
   it("migrates v1 localStorage state with safe v0.2 defaults", () => {

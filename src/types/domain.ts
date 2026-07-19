@@ -352,9 +352,16 @@ export interface GroupRoundParticipant extends SyntheticEntity {
   acceptance: ParticipantAcceptance;
 }
 
+export interface GroupRoundAddOn extends SyntheticEntity {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
 export interface GroupRound extends SyntheticEntity {
   tableId: string;
   participants: GroupRoundParticipant[];
+  addOns: GroupRoundAddOn[];
   split: "mine" | "even" | "items" | "staff" | null;
 }
 
@@ -403,11 +410,34 @@ export interface BottleShopCollection {
 export interface PhoneCallScenario extends SyntheticEntity {
   venueId: VenueId;
   title: string;
-  customerLine: string;
-  assistantLines: string[];
-  createsBooking: boolean;
-  createsRide: boolean;
-  requiresHumanTransfer: boolean;
+  turns: PhoneTranscriptTurn[];
+  outcome: PhoneScenarioOutcome;
+}
+
+export interface PhoneTranscriptTurn {
+  speaker: "assistant" | "customer";
+  text: string;
+}
+
+export interface PhoneScenarioBooking {
+  venueId: VenueId;
+  zoneId: string;
+  tableId: string;
+  partySize: number;
+  arrivalTime: string;
+  layoutPresetId: LayoutPresetId;
+}
+
+export interface PhoneScenarioRide {
+  booked: boolean;
+  inboundPassengers?: number;
+  inboundWindow?: string;
+}
+
+export interface PhoneScenarioOutcome {
+  booking: PhoneScenarioBooking | null;
+  ride: PhoneScenarioRide;
+  humanTransfer: boolean;
 }
 
 export interface PresentationStep extends SyntheticEntity {
@@ -416,6 +446,20 @@ export interface PresentationStep extends SyntheticEntity {
   note: string;
   route: string;
   scenario?: "flagship" | "sports-night" | "accessibility";
+  openService?: boolean;
+  openPhone?: boolean;
+  phoneScenarioId?: string;
+  activatePhoneAudio?: string;
+  preloadScreen?: {
+    screenId: string;
+    content: string;
+    state: ScreenRequestState;
+  };
+  preloadDrink?: DrinkOrder;
+  setStage?: VisitStage;
+  setZone?: string;
+  setTable?: string;
+  setLayoutPreset?: LayoutPresetId;
 }
 
 export interface GroupMember extends SyntheticEntity {

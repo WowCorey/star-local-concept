@@ -2,8 +2,13 @@ import { layoutPresets } from "../../fixtures/layoutPresets";
 import { screenSchedules } from "../../fixtures/entertainment";
 import { serviceTeams } from "../../fixtures/operations";
 import type {
+  BookingState,
   LayoutPresetId,
+  OrderState,
+  ParticipantAcceptance,
+  ScreenRequestState,
   ServiceTeamId,
+  ServiceState,
   TableFilter,
   VenueScreen,
   VenueTable,
@@ -75,24 +80,51 @@ export function getServiceTeam(kind: string) {
 }
 
 export function getHomeNextAction(input: {
+  bookingState: BookingState;
+  selectedZoneId: string | null;
+  selectedTableValid: boolean;
+  courtesyBus: boolean;
   stage: VisitStage;
   rideBooked: boolean;
-  orderState: string;
-  screenRequestState: string;
+  orderState: OrderState;
+  groupParticipantStates: ParticipantAcceptance[];
+  screenRequestState: ScreenRequestState;
   returnPassengers: number;
-  serviceRequestState: string | null;
+  serviceRequestState: ServiceState | null;
 }) {
   if (input.stage === "after-visit")
     return { label: "Review receipt and memories", route: "/me/receipts" };
-  if (!input.rideBooked) return { label: "Plan a safe ride", route: "/ride" };
+  if (["suggested", "held", "changed", "cancelled"].includes(input.bookingState))
+    return {
+      label: input.bookingState === "changed" ? "Review changed booking" : "Confirm your visit",
+      route: "/visit",
+    };
+  if (!input.selectedZoneId || !input.selectedTableValid)
+    return { label: "Choose a valid zone and table", route: "/visit/floor-plan" };
+  if (input.courtesyBus && !input.rideBooked)
+    return { label: "Plan courtesy transport", route: "/ride" };
   if (input.stage === "approaching") return { label: "Check in at your table", route: "/visit" };
-  if (input.stage === "in-venue" && input.orderState === "draft")
+  if (
+    input.stage === "in-venue" &&
+    (["draft", "awaiting-confirmation"].includes(input.orderState) ||
+      input.groupParticipantStates.includes("pending"))
+  )
     return { label: "Start the group order", route: "/order/group" };
-  if (input.stage === "in-venue" && input.screenRequestState === "idle")
-    return { label: "Confirm what is on near you", route: "/visit/watch" };
-  if (input.stage === "in-venue" && input.returnPassengers === 0)
+  if (
+    input.stage === "in-venue" &&
+    ["idle", "requested", "scheduled"].includes(input.screenRequestState)
+  )
+    return {
+      label:
+        input.screenRequestState === "idle"
+          ? "Check what is starting near you"
+          : "View your screen request",
+      route: "/visit/watch",
+    };
+  if (input.stage === "in-venue" && input.courtesyBus && input.returnPassengers === 0)
     return { label: "Confirm the return ride", route: "/ride" };
-  if (input.stage === "in-venue" && !input.serviceRequestState)
-    return { label: "Open Table Service", route: "service" };
+  if (!input.courtesyBus) return { label: "Review safe travel options", route: "/ride" };
+  if (input.serviceRequestState && input.serviceRequestState !== "completed")
+    return { label: "View active service request", route: "service" };
   return { label: "Review tonight's plan", route: "/visit" };
 }

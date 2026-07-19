@@ -24,11 +24,6 @@ export function DrinksOrder() {
   const selected = drinks.find((item) => item.id === state.drinkOrder.itemId);
   const persona = demoRepository.getPersona(state.personaId);
 
-  const submit = () => {
-    if (!selected) return;
-    state.setDrinkOrderState(selected.requiresStaffReview ? "staff-review" : "accepted");
-  };
-
   return (
     <div className="order-section-stack">
       <div className="rsa-boundary">
@@ -176,9 +171,15 @@ export function DrinksOrder() {
             </div>
           </div>
           {state.drinkOrder.state === "draft" ? (
-            <Button full onClick={submit}>
+            <Button full onClick={state.submitDrinkForReview}>
               Submit for review
             </Button>
+          ) : null}
+          {state.drinkOrder.state === "submitted" ? (
+            <div className="info-strip">
+              <Clock3 size={20} />
+              <span>Your drink request has been submitted to the Bar Team.</span>
+            </div>
           ) : null}
           {state.drinkOrder.state === "staff-review" ? (
             <div className="warning-strip">
@@ -210,14 +211,13 @@ export function DrinksOrder() {
               <div className="alternative-grid">
                 <button
                   type="button"
-                  onClick={() =>
-                    state.chooseDrink(
-                      drinks.find((item) => item.category === "Water")?.id ??
-                        drinks.find((item) => item.zeroAlcohol)?.id ??
-                        "",
-                      "Bottle",
-                    )
-                  }
+                  onClick={() => {
+                    const alternative =
+                      drinks.find((item) => item.category === "Water") ??
+                      drinks.find((item) => item.zeroAlcohol);
+                    if (alternative)
+                      state.chooseDrink(alternative.id, alternative.sizes[0]?.label ?? "");
+                  }}
                 >
                   Water
                 </button>
@@ -232,26 +232,20 @@ export function DrinksOrder() {
                 >
                   Zero-alcohol option
                 </button>
-                <button type="button" onClick={() => state.setServiceOpen(true)}>
+                <button type="button" onClick={() => state.requestService("Speak to staff")}>
                   Speak to staff
                 </button>
-                <button type="button" onClick={() => state.setServiceOpen(true)}>
+                <button type="button" onClick={() => state.requestService("Safe trip assistance")}>
                   Safe transport
                 </button>
               </div>
             </>
           ) : null}
-          <div className="demo-state-actions">
-            <button type="button" onClick={() => state.setDrinkOrderState("accepted")}>
-              Demo accept
-            </button>
-            <button type="button" onClick={() => state.setDrinkOrderState("modified")}>
-              Demo modify
-            </button>
-            <button type="button" onClick={() => state.setDrinkOrderState("declined")}>
-              Demo decline
-            </button>
-          </div>
+          {["draft", "submitted", "staff-review"].includes(state.drinkOrder.state) ? (
+            <Button variant="ghost" full onClick={state.cancelDrinkRequest}>
+              Cancel drink request
+            </Button>
+          ) : null}
         </Card>
       ) : null}
     </div>

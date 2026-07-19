@@ -1,4 +1,4 @@
-# Star Local Concept v0.2
+# Star Local Concept v0.2.1
 
 **An independent, unofficial prototype for a customer-facing hospitality operating layer.**
 
@@ -38,7 +38,7 @@ _Every visible person, venue, layout, product, price, event, balance and service
 - **Jordan Lee / Northside Sports Hotel** — Sports Bar, UFC main card, event screens and participant-controlled group round
 - **Taylor Smith / Hinterland Local** — low table, step-free route, accessible transport, community trivia and bottle-shop collection
 
-Use **Demo Controls** to load a journey or tune the simulated day, time, layout, booking, order, service, screen, transport, marketing, rewards, phone and collection states. **Reset demo** restores the v0.2 flagship defaults.
+Use **Demo Controls** to load a journey or tune the simulated day, time, layout, booking, order, service, screen, transport, marketing, rewards, phone and collection states. **Reset demo** restores the v0.2.1 flagship defaults.
 
 ## Local setup
 
@@ -49,7 +49,7 @@ npm ci
 npm run dev
 ```
 
-Vite prints the local URL. Runtime state persists under the versioned browser key `star-local-demo-v1`; v0.1 state is migrated to the v0.2 schema with safe defaults.
+Vite prints the local URL. Runtime state persists under the versioned browser key `star-local-demo-v1`; earlier state is migrated to the v0.2.1 schema with safe defaults.
 
 To clear v0.2 state, use **Demo Controls → Reset demo**, or run this in the browser console and reload:
 

@@ -8,6 +8,7 @@ export const presentationSteps: PresentationStep[] = [
     title: "The usual Thursday",
     note: "Start with one useful prompt, not a menu of features.",
     route: "/",
+    scenario: "flagship",
   },
   {
     id: "present-2",
@@ -16,6 +17,7 @@ export const presentationSteps: PresentationStep[] = [
     title: "Choose a zone",
     note: "Compare the family Bistro with the higher-energy Sports Bar.",
     route: "/visit/zones",
+    scenario: "flagship",
   },
   {
     id: "present-3",
@@ -24,6 +26,9 @@ export const presentationSteps: PresentationStep[] = [
     title: "Select a zone-aware table",
     note: "Show filters, access and real screen sightlines.",
     route: "/visit/floor-plan",
+    scenario: "flagship",
+    setZone: "harbour-bistro",
+    setTable: "table-23",
   },
   {
     id: "present-4",
@@ -32,6 +37,7 @@ export const presentationSteps: PresentationStep[] = [
     title: "Book courtesy transport",
     note: "Only broad windows and the customer's own ride are visible.",
     route: "/ride",
+    scenario: "flagship",
   },
   {
     id: "present-5",
@@ -40,6 +46,8 @@ export const presentationSteps: PresentationStep[] = [
     title: "Arrive at the venue",
     note: "Check-in turns Home into an in-venue operating view.",
     route: "/visit",
+    scenario: "flagship",
+    setStage: "approaching",
   },
   {
     id: "present-6",
@@ -48,6 +56,8 @@ export const presentationSteps: PresentationStep[] = [
     title: "Order the usual meal",
     note: "Preferences remain reviewable and allergies keep a human boundary.",
     route: "/order/food",
+    scenario: "flagship",
+    setStage: "in-venue",
   },
   {
     id: "present-7",
@@ -56,6 +66,15 @@ export const presentationSteps: PresentationStep[] = [
     title: "Build a controlled round",
     note: "Every age-restricted item belongs to an identified adult.",
     route: "/order/group",
+    scenario: "flagship",
+    setStage: "in-venue",
+    preloadDrink: {
+      itemId: "harbour-lager",
+      size: "Schooner",
+      participantId: "round-alex",
+      tableId: "table-23",
+      state: "staff-review",
+    },
   },
   {
     id: "present-8",
@@ -64,6 +83,14 @@ export const presentationSteps: PresentationStep[] = [
     title: "Coordinate Screen 7",
     note: "Locked, scheduled and requestable screens behave differently.",
     route: "/visit/watch",
+    scenario: "flagship",
+    setStage: "in-venue",
+    preloadScreen: {
+      screenId: "screen-7",
+      content: "Cowboys vs Broncos",
+      state: "requested",
+    },
+    activatePhoneAudio: "screen-7",
   },
   {
     id: "present-9",
@@ -72,6 +99,9 @@ export const presentationSteps: PresentationStep[] = [
     title: "Ask for Table Service",
     note: "Requests route to an operational team without fake staff identities.",
     route: "/",
+    scenario: "flagship",
+    setStage: "in-venue",
+    openService: true,
   },
   {
     id: "present-10",
@@ -80,6 +110,8 @@ export const presentationSteps: PresentationStep[] = [
     title: "Member draw and rewards",
     note: "Hospitality benefits remain separate from gaming activity.",
     route: "/rewards",
+    scenario: "flagship",
+    setStage: "in-venue",
   },
   {
     id: "present-11",
@@ -88,6 +120,7 @@ export const presentationSteps: PresentationStep[] = [
     title: "Customer memory",
     note: "Customers can inspect, pause, edit or remove what is remembered.",
     route: "/me",
+    scenario: "flagship",
   },
   {
     id: "present-12",
@@ -97,6 +130,8 @@ export const presentationSteps: PresentationStep[] = [
     note: "The same structured plan can begin through a disclosed automated call.",
     route: "/",
     scenario: "flagship",
+    openPhone: true,
+    phoneScenarioId: "call-usual",
   },
   {
     id: "present-13",
@@ -106,6 +141,14 @@ export const presentationSteps: PresentationStep[] = [
     note: "Switch venue to prove screens, zones, transport and products are local.",
     route: "/visit/watch",
     scenario: "sports-night",
+    setZone: "north-sports",
+    setTable: "north-12",
+    setLayoutPreset: "ufc-night",
+    preloadScreen: {
+      screenId: "north-screen-1",
+      content: "UFC main card",
+      state: "scheduled",
+    },
   },
   {
     id: "present-14",
@@ -115,6 +158,17 @@ export const presentationSteps: PresentationStep[] = [
     note: "Main-card schedules cannot be overridden; prelim screens can be requested.",
     route: "/order/group",
     scenario: "sports-night",
+    setStage: "in-venue",
+    setZone: "north-sports",
+    setTable: "north-12",
+    setLayoutPreset: "ufc-night",
+    preloadDrink: {
+      itemId: "north-tap",
+      size: "Schooner",
+      participantId: "round-jordan",
+      tableId: "north-12",
+      state: "staff-review",
+    },
   },
   {
     id: "present-15",
@@ -124,6 +178,9 @@ export const presentationSteps: PresentationStep[] = [
     note: "Show a low table, step-free plan, accessible bus and community atmosphere.",
     route: "/visit/floor-plan",
     scenario: "accessibility",
+    setZone: "hinterland-dining",
+    setTable: "hinterland-4",
+    setLayoutPreset: "trivia-night",
   },
   {
     id: "present-16",

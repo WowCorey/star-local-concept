@@ -2832,6 +2832,38 @@ a {
     transform 250ms ease,
     box-shadow 180ms ease;
 }
+.joined-table-boundary {
+  position: absolute;
+  z-index: 1;
+  border: 3px solid rgba(29, 137, 139, 0.72);
+  border-radius: 18px;
+  background: rgba(29, 137, 139, 0.08);
+  pointer-events: none;
+  transition: all 250ms ease;
+}
+.joined-table-boundary > span {
+  position: absolute;
+  left: 50%;
+  top: -13px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: white;
+  background: var(--teal);
+  font-size: 0.58rem;
+  font-weight: 850;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.joined-table-boundary > i {
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 50%;
+  border-top: 3px solid var(--teal);
+}
+.map-table-v02.joined-member {
+  border-color: var(--teal);
+}
 .map-table-v02.table-high {
   border-radius: 999px;
 }
@@ -2865,6 +2897,15 @@ a {
   border-radius: 11px;
   background: var(--gold-soft);
   font-size: 0.75rem;
+}
+.participant-authority-note {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+.round-addons .receipt-line {
+  margin-top: 8px;
 }
 .journey-hero {
   position: relative;

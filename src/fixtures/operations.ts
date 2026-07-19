@@ -141,44 +141,100 @@ export const phoneCallScenarios: PhoneCallScenario[] = [
     synthetic: true,
     venueId: "harbour",
     title: "Usual table and family bus",
-    customerLine: "Book our normal table for six tomorrow and arrange the bus for Mum and Dad.",
-    assistantLines: [
-      "Thanks for calling Harbour Family Hotel. I'm the automated venue assistant. How can I help?",
-      "I found your usual Thursday visit: Bistro Table 23 for six at 6:45 pm, plus an inbound courtesy-bus window for two passengers.",
-      "Please confirm the summary before I add it to the visit plan.",
+    turns: [
+      {
+        speaker: "assistant",
+        text: "Thanks for calling Harbour Family Hotel. I'm the automated venue assistant. How can I help?",
+      },
+      {
+        speaker: "customer",
+        text: "Book our normal table for six tomorrow and arrange the bus for Mum and Dad.",
+      },
+      {
+        speaker: "assistant",
+        text: "I found your usual Bistro Table 23 for six at 6:45 pm.",
+      },
+      {
+        speaker: "customer",
+        text: "Yes, and the inbound bus is for two passengers.",
+      },
+      {
+        speaker: "assistant",
+        text: "The structured plan includes a 6:15 pm to 6:45 pm inbound window. Please confirm before I add it.",
+      },
     ],
-    createsBooking: true,
-    createsRide: true,
-    requiresHumanTransfer: false,
+    outcome: {
+      booking: {
+        venueId: "harbour",
+        zoneId: "harbour-bistro",
+        tableId: "table-23",
+        partySize: 6,
+        arrivalTime: "6:45 pm",
+        layoutPresetId: "thursday-draw",
+      },
+      ride: {
+        booked: true,
+        inboundPassengers: 2,
+        inboundWindow: "6:15 pm - 6:45 pm",
+      },
+      humanTransfer: false,
+    },
   },
   {
     id: "call-ufc",
     synthetic: true,
     venueId: "northside",
     title: "UFC Sports Bar booking",
-    customerLine: "Are you showing the UFC tonight and can I book a Sports Bar table?",
-    assistantLines: [
-      "You're speaking with an automated venue assistant.",
-      "The synthetic schedule shows the UFC main card on Arena Screen 1.",
-      "I can hold Sports Bar Table 12 for four, subject to confirmation.",
+    turns: [
+      { speaker: "assistant", text: "You're speaking with an automated venue assistant." },
+      {
+        speaker: "customer",
+        text: "Are you showing the UFC tonight and can I book a Sports Bar table?",
+      },
+      {
+        speaker: "assistant",
+        text: "The synthetic schedule shows the UFC main card on Arena Screen 1.",
+      },
+      { speaker: "customer", text: "Book a table for four at 7:30 pm." },
+      {
+        speaker: "assistant",
+        text: "Sports Bar Table 12 is ready to confirm. This venue has no courtesy-bus booking in the plan.",
+      },
     ],
-    createsBooking: true,
-    createsRide: false,
-    requiresHumanTransfer: false,
+    outcome: {
+      booking: {
+        venueId: "northside",
+        zoneId: "north-sports",
+        tableId: "north-12",
+        partySize: 4,
+        arrivalTime: "7:30 pm",
+        layoutPresetId: "ufc-night",
+      },
+      ride: { booked: false },
+      humanTransfer: false,
+    },
   },
   {
     id: "call-allergy",
     synthetic: true,
     venueId: "harbour",
     title: "Serious allergy question",
-    customerLine: "I have a serious allergy question.",
-    assistantLines: [
-      "You're speaking with an automated venue assistant.",
-      "I won't guess about allergy safety.",
-      "I'm transferring this demo to a person so venue staff can discuss ingredients and preparation.",
+    turns: [
+      { speaker: "assistant", text: "You're speaking with an automated venue assistant." },
+      { speaker: "customer", text: "I have a serious allergy question." },
+      {
+        speaker: "assistant",
+        text: "I won't guess about allergy safety or change your current visit plan.",
+      },
+      {
+        speaker: "assistant",
+        text: "I'm transferring this demo to a person so venue staff can discuss ingredients and preparation.",
+      },
     ],
-    createsBooking: false,
-    createsRide: false,
-    requiresHumanTransfer: true,
+    outcome: {
+      booking: null,
+      ride: { booked: false },
+      humanTransfer: true,
+    },
   },
 ];

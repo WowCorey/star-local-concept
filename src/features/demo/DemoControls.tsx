@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useRef } from "react";
 import {
   Accessibility,
   Flag,
@@ -14,6 +14,7 @@ import {
 import { Button, Toggle } from "../../components/ui";
 import { demoRepository } from "../../services/demoRepository";
 import { useDemoStore, type DemoScenario } from "../../state/demoStore";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 import type {
   BookingState,
   BottleShopCollectionState,
@@ -50,18 +51,26 @@ const options = (values: string[]) =>
 
 export function DemoControls() {
   const state = useDemoStore();
+  const dialogRef = useRef<HTMLElement>(null);
   const personas = demoRepository.getPersonas();
   const venues = demoRepository.getVenues();
   const venue = demoRepository.getVenue(state.venueId);
   const layout = demoRepository.getLayout(state.venueId);
   const presets = demoRepository.getLayoutPresets();
+  const activePreset = presets.find((preset) => preset.id === state.layoutPresetId)!;
+  const recommendedPresets = presets.filter((preset) =>
+    preset.recommendedVenueIds.includes(state.venueId),
+  );
+  const otherPresets = presets.filter(
+    (preset) => !preset.recommendedVenueIds.includes(state.venueId),
+  );
   const phoneScenarios = demoRepository.getPhoneScenarios();
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && state.setDemoOpen(false);
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [state]);
+  useDialogFocus({
+    dialogRef,
+    onRequestClose: () => state.setDemoOpen(false),
+    restoreFocusSelector: "[data-dialog-trigger='demo']",
+  });
 
   return (
     <div
@@ -70,15 +79,17 @@ export function DemoControls() {
       onMouseDown={(event) => event.currentTarget === event.target && state.setDemoOpen(false)}
     >
       <section
+        ref={dialogRef}
         className="sheet demo-sheet"
         role="dialog"
         aria-modal="true"
         aria-labelledby="demo-title"
+        tabIndex={-1}
       >
         <header className="sheet-header">
           <div>
             <p className="eyebrow">Presenter only</p>
-            <h2 id="demo-title">Demo Controls v0.2</h2>
+            <h2 id="demo-title">Demo Controls v0.2.1</h2>
           </div>
           <button
             className="icon-button"
@@ -150,11 +161,20 @@ export function DemoControls() {
                 value={state.layoutPresetId}
                 onChange={(event) => state.setLayoutPreset(event.target.value as LayoutPresetId)}
               >
-                {presets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.label}
-                  </option>
-                ))}
+                <optgroup label={`Recommended for ${venue.shortName}`}>
+                  {recommendedPresets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="Other demonstration presets">
+                  {otherPresets.map((preset) => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.label}
+                    </option>
+                  ))}
+                </optgroup>
               </select>
             </label>
             <label className="field">
@@ -164,7 +184,11 @@ export function DemoControls() {
                 onChange={(event) => state.selectTable(event.target.value)}
               >
                 {layout.tables
-                  .filter((table) => table.zoneId === state.selectedZoneId)
+                  .filter(
+                    (table) =>
+                      table.zoneId === state.selectedZoneId &&
+                      !activePreset.hiddenTableIds.includes(table.id),
+                  )
                   .map((table) => (
                     <option key={table.id} value={table.id}>
                       Table {table.displayNumber}
@@ -209,7 +233,7 @@ export function DemoControls() {
               </select>
             </label>
             <label className="field">
-              <span>Food order</span>
+              <span>Food preparation</span>
               <select
                 value={state.orderState}
                 onChange={(event) => state.setOrderState(event.target.value as OrderState)}
@@ -226,7 +250,7 @@ export function DemoControls() {
               </select>
             </label>
             <label className="field">
-              <span>Drink review</span>
+              <span>Drink review and delivery</span>
               <select
                 value={state.drinkOrder.state}
                 onChange={(event) =>
@@ -245,29 +269,31 @@ export function DemoControls() {
                 ])}
               </select>
             </label>
+            {state.groupRound.participants.map((participant) => (
+              <label className="field" key={participant.id}>
+                <span>{participant.name} response</span>
+                <select
+                  value={participant.acceptance}
+                  onChange={(event) =>
+                    state.setParticipantAcceptance(
+                      participant.id,
+                      event.target.value as ParticipantAcceptance,
+                    )
+                  }
+                >
+                  {options([
+                    "pending",
+                    "accepted",
+                    "declined",
+                    "staff-order",
+                    "age-check",
+                    "delivered",
+                  ])}
+                </select>
+              </label>
+            ))}
             <label className="field">
-              <span>Group participant</span>
-              <select
-                value={state.groupRound.participants[0]?.acceptance}
-                onChange={(event) =>
-                  state.setParticipantAcceptance(
-                    state.groupRound.participants[0]!.id,
-                    event.target.value as ParticipantAcceptance,
-                  )
-                }
-              >
-                {options([
-                  "pending",
-                  "accepted",
-                  "declined",
-                  "staff-order",
-                  "age-check",
-                  "delivered",
-                ])}
-              </select>
-            </label>
-            <label className="field">
-              <span>Service request</span>
+              <span>Table Service progression</span>
               <select
                 value={state.serviceRequestState ?? "none"}
                 onChange={(event) =>
@@ -302,6 +328,33 @@ export function DemoControls() {
                 <option value={25}>25 minutes</option>
               </select>
             </label>
+            <label className="field">
+              <span>Delivery completion</span>
+              <select
+                value={
+                  state.orderState === "delivered" && state.drinkOrder.state === "delivered"
+                    ? "all"
+                    : state.orderState === "delivered"
+                      ? "food"
+                      : state.drinkOrder.state === "delivered"
+                        ? "drink"
+                        : "none"
+                }
+                onChange={(event) => {
+                  const value = event.target.value;
+                  if (value === "food" || value === "all") state.setOrderState("delivered");
+                  else if (state.orderState === "delivered") state.setOrderState("submitted");
+                  if (value === "drink" || value === "all") state.setDrinkOrderState("delivered");
+                  else if (state.drinkOrder.state === "delivered")
+                    state.setDrinkOrderState("accepted");
+                }}
+              >
+                <option value="none">No delivery complete</option>
+                <option value="food">Food delivered</option>
+                <option value="drink">Drink delivered</option>
+                <option value="all">Food and drink delivered</option>
+              </select>
+            </label>
           </div>
           <div className="control-group field-grid">
             <h3>Screen, audio and transport</h3>
@@ -325,7 +378,7 @@ export function DemoControls() {
               </select>
             </label>
             <label className="field">
-              <span>Screen request</span>
+              <span>Screen approval</span>
               <select
                 value={state.screenRequestState}
                 onChange={(event) =>
@@ -405,7 +458,7 @@ export function DemoControls() {
               </select>
             </label>
             <label className="field">
-              <span>Bottle-shop state</span>
+              <span>Bottle-shop preparation</span>
               <select
                 value={state.bottleShopCollection.state}
                 onChange={(event) =>
@@ -472,6 +525,7 @@ export function DemoControls() {
           <div className="inline-actions">
             <Button
               variant="teal"
+              data-dialog-trigger="phone"
               onClick={() => {
                 state.setDemoOpen(false);
                 state.setPhoneOpen(true);

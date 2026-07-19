@@ -10,7 +10,7 @@ Never commit real customer or employee information, credentials, membership numb
 
 - Runtime state stays in the browser and no telemetry or analytics are sent.
 - There are no API keys, environment variables, remote data sources or backend endpoints.
-- Persistence is limited to `star-local-demo-v1`; persistence version 2 safely migrates older prototype state.
+- Persistence is limited to `star-local-demo-v1`; persistence version 3 safely migrates older prototype state and replaces a table hidden by an active layout.
 - Reset rebuilds synthetic defaults. Deleting the localStorage key removes all persisted demo state.
 - Ask Star is a local deterministic intent catalogue, not a live AI model.
 - Phone audio, receptionist transcripts and the QR graphic are generated locally.
@@ -31,6 +31,16 @@ Never commit real customer or employee information, credentials, membership numb
 - **Gaming:** no reservations, controls, cashless functionality, recommendations, marketing or activity data are implemented.
 - **Collection:** the customer initiates a fabricated reservation and age/supply confirmation remains at the collection counter.
 - **Payments and check-in:** visual simulations never charge, authenticate, scan or locate anyone.
+
+## State-authority boundary
+
+Customer-facing controls can submit or cancel a request, select an alternative, respond to the current synthetic participant's own item, reserve a collection before preparation, and request human help. They cannot self-declare alcohol approval, venue age confirmation, order preparation or delivery, service acceptance or completion, collection readiness or completion, or television approval.
+
+Demo Controls and deterministic presentation presets are the only UI surfaces that simulate those venue-controlled outcomes. This separation does not claim production authorization or authentication; it makes the concept's intended trust boundary visible and testable.
+
+Phone-call fixtures store their ordered transcript and structured outcome together. The summary is rendered from the outcome that mutates local visit state. Allergy transfer writes no booking or safety claim and preserves both the current visit and already-displayed transcript.
+
+Modal surfaces move and contain keyboard focus, restore the triggering control, and make background content inert. Escape closes non-urgent dialogs. Urgent assistance views require a clear warning and explicit close action while the request remains active.
 
 ## Review before publication
 

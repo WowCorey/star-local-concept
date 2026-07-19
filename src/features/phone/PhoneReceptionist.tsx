@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useRef } from "react";
 import { ArrowRight, Bot, CheckCircle2, PhoneCall, UserRound, X } from "lucide-react";
 import { Badge, Button } from "../../components/ui";
 import { demoRepository } from "../../services/demoRepository";
 import { useDemoStore } from "../../state/demoStore";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 import type { PhoneCallState } from "../../types/domain";
 
 const states: PhoneCallState[] = [
@@ -11,31 +12,40 @@ const states: PhoneCallState[] = [
   "identifying",
   "gathering",
   "confirming",
-  "completed",
 ];
 
 export function PhoneReceptionist() {
   const state = useDemoStore();
+  const dialogRef = useRef<HTMLElement>(null);
   const scenarios = demoRepository.getPhoneScenarios();
   const scenario = scenarios.find((item) => item.id === state.phoneScenarioId) ?? scenarios[0]!;
-  const stateIndex = states.indexOf(state.phoneCallState);
+  const booking = scenario.outcome.booking;
+  const bookingVenue = booking ? demoRepository.getVenue(booking.venueId) : null;
+  const bookingZone = bookingVenue?.zones.find((zone) => zone.id === booking?.zoneId);
+  const bookingTable = booking
+    ? demoRepository.getLayout(booking.venueId).tables.find((table) => table.id === booking.tableId)
+    : null;
 
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && state.setPhoneOpen(false);
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [state]);
+  useDialogFocus({
+    dialogRef,
+    onRequestClose: () => state.setPhoneOpen(false),
+    restoreFocusSelector: "[data-dialog-trigger='phone'], [data-dialog-trigger='demo']",
+  });
 
   const advance = () => {
-    if (scenario.requiresHumanTransfer && stateIndex >= 2) {
-      state.setPhoneCallState("human-transfer");
+    const nextCount = Math.min(scenario.turns.length, state.phoneTranscriptTurnCount + 1);
+    if (scenario.outcome.humanTransfer && nextCount >= scenario.turns.length) {
+      state.completePhoneScenario(scenario);
       return;
     }
-    if (stateIndex >= states.length - 2) state.completePhoneScenario(scenario.createsRide);
-    else state.setPhoneCallState(states[Math.max(0, stateIndex + 1)]!);
+    if (state.phoneTranscriptTurnCount >= scenario.turns.length) {
+      state.completePhoneScenario(scenario);
+      return;
+    }
+    state.setPhoneTranscriptTurnCount(nextCount);
+    state.setPhoneCallState(states[Math.min(states.length - 1, nextCount - 1)]!);
   };
 
-  const visibleLines = Math.max(1, stateIndex + 1);
   return (
     <div
       className="overlay phone-overlay"
@@ -43,10 +53,12 @@ export function PhoneReceptionist() {
       onMouseDown={(event) => event.currentTarget === event.target && state.setPhoneOpen(false)}
     >
       <section
+        ref={dialogRef}
         className="sheet phone-sheet"
         role="dialog"
         aria-modal="true"
         aria-labelledby="phone-title"
+        tabIndex={-1}
       >
         <header className="sheet-header">
           <div>
@@ -91,53 +103,59 @@ export function PhoneReceptionist() {
             aria-live="polite"
             aria-label="Accessible phone call transcript"
           >
-            {scenario.assistantLines.slice(0, visibleLines).map((line) => (
-              <div key={line} className="assistant-line">
+            {scenario.turns.slice(0, state.phoneTranscriptTurnCount).map((turn, index) => (
+              <div
+                key={`${turn.speaker}-${index}`}
+                className={turn.speaker === "assistant" ? "assistant-line" : "caller-line"}
+              >
                 <span>
-                  <Bot size={16} />
+                  {turn.speaker === "assistant" ? <Bot size={16} /> : <UserRound size={16} />}
                 </span>
                 <p>
-                  <strong>Automated assistant</strong>
-                  {line}
+                  <strong>
+                    {turn.speaker === "assistant" ? "Automated assistant" : "Customer"}
+                  </strong>
+                  {turn.text}
                 </p>
               </div>
             ))}
-            {stateIndex >= 1 ? (
-              <div className="caller-line">
-                <span>
-                  <UserRound size={16} />
-                </span>
-                <p>
-                  <strong>Customer</strong>
-                  {scenario.customerLine}
-                </p>
-              </div>
-            ) : null}
           </div>
-          {state.phoneCallState === "confirming" ? (
+          {state.phoneCallState === "confirming" && booking ? (
             <div className="booking-summary">
               <h3>Structured visit plan</h3>
               <dl>
                 <div>
+                  <dt>Venue</dt>
+                  <dd>{bookingVenue?.name}</dd>
+                </div>
+                <div>
                   <dt>Table</dt>
                   <dd>
-                    {scenario.venueId === "northside" ? "Sports Bar Table 12" : "Bistro Table 23"}
+                    {bookingZone?.name} Table {bookingTable?.displayNumber}
                   </dd>
                 </div>
                 <div>
                   <dt>Party</dt>
-                  <dd>{scenario.venueId === "northside" ? "4 people" : "6 people"}</dd>
+                  <dd>{booking.partySize} people</dd>
                 </div>
                 <div>
                   <dt>Arrival</dt>
-                  <dd>{scenario.venueId === "northside" ? "7:30 pm" : "6:45 pm"}</dd>
+                  <dd>{booking.arrivalTime}</dd>
                 </div>
-                {scenario.createsRide ? (
+                {scenario.outcome.ride.booked ? (
                   <div>
                     <dt>Inbound bus</dt>
-                    <dd>2 passengers · 6:15–6:45 pm</dd>
+                    <dd>
+                      {scenario.outcome.ride.inboundPassengers} passengers ·{" "}
+                      {scenario.outcome.ride.inboundWindow}
+                    </dd>
                   </div>
-                ) : null}
+                ) : (
+                  <div>
+                    <dt>Courtesy bus</dt>
+                    <dd>Not booked</dd>
+                  </div>
+                )}
               </dl>
             </div>
           ) : null}

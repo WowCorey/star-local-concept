@@ -9,8 +9,8 @@
 5. In Demo Controls change the layout preset. Show that event conditions can move, join or hide synthetic tables without exposing operational data.
 6. Open **Watch Tonight**. Contrast the locked main wall, scheduled content and requestable Screen 7. Request the Cowboys game, then start and pause the local phone-audio simulation.
 7. Open **Order → Food**, choose the chicken parmigiana and apply Alex's reviewable usual. Confirm it, then switch to **Drinks** and submit a lager for staff review.
-8. Open **Group round**. Assign an item to a named participant and accept it independently. Point out that alcohol remains assigned to an identified adult and venue staff retain control.
-9. Check in from Visit. Open the now-persistent **Table Service** control, request sauce and advance the response through requested, accepted, on the way and completed.
+8. Open **Group round**. Assign an item to a named participant and respond only to Alex's own item. Add water for everyone and show the persisted zero-cost line. Use Demo Controls to demonstrate other participant and delivery outcomes.
+9. Check in from Visit. Open the persistent **Table Service** control and request sauce. Point out that the customer can cancel or ask for a person, then use Demo Controls to progress the venue response through requested, accepted, on the way and completed.
 10. Finish with **Rewards** and **Me**: show fabricated activity, wallet, receipt history, marketing controls and remembered preferences that can be paused, edited or removed.
 
 ## Proving venue-local behaviour
@@ -44,7 +44,8 @@ Ask Star is deterministic and never represents itself as live AI.
 
 ## Recovery and reset
 
-- Escape closes Ask Star, Demo Controls, Table Service, phone simulation and presentation mode.
+- Escape closes non-urgent Ask Star, Demo Controls, Table Service and phone dialogs, then restores their trigger. Urgent assistance shows a warning and keeps the request active.
+- Escape exits presentation mode when no presentation-opened dialog is active.
 - **Demo Controls → Reset demo** restores the complete flagship state.
 - For a hard reset, remove `star-local-demo-v1` from localStorage and reload.
 - State selectors can repair individual booking, order, ride, screen, service, phone and collection conditions during a meeting.

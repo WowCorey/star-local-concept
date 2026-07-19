@@ -54,4 +54,24 @@ describe("demo state transitions", () => {
     useDemoStore.getState().resetDemo();
     expect(useDemoStore.getState().partySize).toBe(6);
   });
+
+  it("submits a controlled drink to staff review without customer approval", () => {
+    useDemoStore.getState().chooseDrink("harbour-lager", "Schooner");
+    useDemoStore.getState().submitDrinkForReview();
+    expect(useDemoStore.getState().drinkOrder.state).toBe("staff-review");
+  });
+
+  it("limits participant response to the current persona", () => {
+    const jordanBefore = useDemoStore
+      .getState()
+      .groupRound.participants.find((participant) => participant.id === "round-jordan")!;
+    useDemoStore.getState().respondToOwnRoundItem("declined");
+    const round = useDemoStore.getState().groupRound;
+    expect(
+      round.participants.find((participant) => participant.id === "round-alex")?.acceptance,
+    ).toBe("declined");
+    expect(round.participants.find((participant) => participant.id === "round-jordan")).toEqual(
+      jordanBefore,
+    );
+  });
 });

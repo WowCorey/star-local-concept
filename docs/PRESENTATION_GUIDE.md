@@ -2,7 +2,7 @@
 
 ## Starting and controlling
 
-Select **Start Presentation** in the desktop presenter panel or **Demo Controls → Start presentation**. The overlay shows the current step, presenter note and route. Use Previous/Next or the arrow keys where available; select Exit or press Escape at any time.
+Select **Start Presentation** in the desktop presenter panel or **Demo Controls → Start presentation**. The overlay shows the current step, presenter note and route. Use Previous/Next or the arrow keys where available. Steps 9 and 12 open their service and phone dialogs automatically; close the active dialog before continuing. Select Exit, or press Escape while no dialog is open, to leave presentation mode.
 
 The 16 steps move through:
 
@@ -40,4 +40,4 @@ The wide-screen panel renders `https://wowcorey.github.io/star-local-concept/` a
 
 ## Recovery
 
-Escape exits presentation mode. Demo Controls can reload any scenario or reset the full app. The presentation step itself is persisted safely but an open overlay is never restored after a hard reset.
+Escape exits presentation mode when no step dialog is open. Demo Controls can reload any scenario or reset the full app. Previous and Next reapply each step's complete deterministic setup, including venue switches. The presentation step itself is persisted safely but an open overlay is never restored after a hard reset.

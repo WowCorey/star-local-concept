@@ -50,6 +50,20 @@ export function FloorPlanPage() {
     .filter((table) => table.zoneId === zone.id)
     .map((table) => applyLayoutPreset(table, state.layoutPresetId))
     .filter((table): table is VenueTable => Boolean(table));
+  const joinedTables = zoneTables.filter((table) => preset.joinedTableIds.includes(table.id));
+  const joinedCapacity = joinedTables.reduce((sum, table) => sum + table.maximumCapacity, 0);
+  const joinedBoundary =
+    joinedTables.length > 1
+      ? {
+          left: Math.max(1, Math.min(...joinedTables.map((table) => table.x)) - 3),
+          top: Math.max(1, Math.min(...joinedTables.map((table) => table.y)) - 5),
+          right: Math.min(99, Math.max(...joinedTables.map((table) => table.x + table.width)) + 3),
+          bottom: Math.min(
+            99,
+            Math.max(...joinedTables.map((table) => table.y + table.height)) + 5,
+          ),
+        }
+      : null;
   const selected = zoneTables.find((table) => table.id === state.selectedTableId) ?? zoneTables[0];
   const activeFilters = state.tableFilters;
   const isMatch = (table: VenueTable) =>
@@ -136,13 +150,30 @@ export function FloorPlanPage() {
               {landmark}
             </span>
           ))}
+          {joinedBoundary ? (
+            <div
+              className="joined-table-boundary"
+              style={{
+                left: `${joinedBoundary.left}%`,
+                top: `${joinedBoundary.top}%`,
+                width: `${joinedBoundary.right - joinedBoundary.left}%`,
+                height: `${joinedBoundary.bottom - joinedBoundary.top}%`,
+              }}
+              role="group"
+              aria-label={`Joined group: Tables ${joinedTables.map((table) => table.displayNumber).join(" and ")}, combined capacity ${joinedCapacity} people. Tables remain individually selectable.`}
+            >
+              <span>Joined group · up to {joinedCapacity}</span>
+              <i aria-hidden="true" />
+            </div>
+          ) : null}
           {zoneTables.map((table) => {
             const matching = isMatch(table);
             const reasons = tableMatchReasons(table, activeFilters);
+            const joined = joinedTables.length > 1 && preset.joinedTableIds.includes(table.id);
             return (
               <button
                 key={table.id}
-                className={`map-table map-table-v02 table-${table.tableType} ${state.selectedTableId === table.id ? "selected" : ""} ${activeFilters.length && !matching ? "receded" : ""} ${matching && activeFilters.length ? "matching" : ""}`}
+                className={`map-table map-table-v02 table-${table.tableType} ${joined ? "joined-member" : ""} ${state.selectedTableId === table.id ? "selected" : ""} ${activeFilters.length && !matching ? "receded" : ""} ${matching && activeFilters.length ? "matching" : ""}`}
                 type="button"
                 style={{
                   left: `${table.x}%`,
@@ -153,7 +184,7 @@ export function FloorPlanPage() {
                 }}
                 onClick={() => state.selectTable(table.id)}
                 aria-pressed={state.selectedTableId === table.id}
-                aria-label={`Table ${table.displayNumber}, ${table.minimumCapacity} to ${table.maximumCapacity} people, ${zone.name}, ${table.tableType ?? "standard"} table, ${table.noiseLevel} atmosphere, ${table.accessibility ? "step-free" : "standard access"}, ${table.nearbyScreenIds.length ? "screen visible" : "no screen sightline"}, ${matching ? `matches ${reasons.join(", ") || "current selection"}` : "does not match selected filters"}`}
+                aria-label={`Table ${table.displayNumber}, ${table.minimumCapacity} to ${table.maximumCapacity} people, ${zone.name}, ${table.tableType ?? "standard"} table, ${joined ? `member of a joined group with combined capacity ${joinedCapacity}, individually selectable, ` : ""}${table.noiseLevel} atmosphere, ${table.accessibility ? "step-free" : "standard access"}, ${table.nearbyScreenIds.length ? "screen visible" : "no screen sightline"}, ${matching ? `matches ${reasons.join(", ") || "current selection"}` : "does not match selected filters"}`}
               >
                 {table.displayNumber}
               </button>
@@ -195,6 +226,11 @@ export function FloorPlanPage() {
                 Table {selected.displayNumber} · {zone.name}
               </h2>
               <p>{selected.customerDescription}</p>
+              {joinedTables.length > 1 && preset.joinedTableIds.includes(selected.id) ? (
+                <Badge tone="teal">
+                  Joined group · {joinedCapacity} combined capacity · individually selectable
+                </Badge>
+              ) : null}
             </div>
           </div>
           <div className="attribute-grid">
@@ -257,6 +293,9 @@ export function FloorPlanPage() {
                   Table {table.displayNumber} · {table.tableType}
                 </strong>
                 <small>{table.customerDescription}</small>
+                {joinedTables.length > 1 && preset.joinedTableIds.includes(table.id) ? (
+                  <small>Joined group · combined capacity {joinedCapacity}</small>
+                ) : null}
               </span>
               <Badge tone={isMatch(table) ? "success" : "neutral"}>
                 {isMatch(table) ? "match" : "other"}

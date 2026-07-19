@@ -172,7 +172,7 @@ export function FoodOrder() {
             <strong>${chosen.price.toFixed(2)}</strong>
           </div>
           {state.orderState !== "submitted" ? (
-            <Button full onClick={() => state.setOrderState("submitted")}>
+            <Button full onClick={state.submitFoodOrder}>
               Confirm food order
             </Button>
           ) : (

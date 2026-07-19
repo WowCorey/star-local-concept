@@ -17,11 +17,13 @@ No step estimates intoxication, verifies age, guarantees stock, calculates legal
 
 ## Group rounds
 
-Every selection is attached to an identified synthetic participant. Participants have independent pending, accepted, declined, staff-order, age-check and delivered states. A group organiser cannot silently accept a controlled item on another participant's behalf. Water can be added for everyone without changing drink-review status.
+Every selection is attached to an identified synthetic participant. Participants have independent pending, accepted, declined, staff-order, age-check and delivered states. The signed-in synthetic customer can accept or decline only their own assigned item; the customer interface cannot change another participant's response or any venue-controlled state. Water is stored as an explicit zero-cost round add-on and appears in Group Round, My Order and progress without changing drink-review status.
 
 ## Human control
 
-The prototype uses functional team labels rather than invented employee identities. Staff review remains visible in the order status and Demo Controls. Urgent or safety-sensitive assistance routes to the immediate-human function.
+The prototype uses functional team labels rather than invented employee identities. Customer actions stop at submit, cancel before review, choose a zero-alcohol alternative, or ask for staff. Alcohol acceptance, modification, decline, age checking, preparation and delivery are presenter actions in Demo Controls. Staff review remains visible in order status. Urgent or safety-sensitive assistance routes to the immediate-human function.
+
+The same boundary applies beside drink ordering: customers cannot complete a service request, approve a television request, or advance bottle-shop preparation and collection. Those operational outcomes are simulated only by the presenter.
 
 ## Data boundary
 

@@ -224,17 +224,21 @@ export function VisitPage() {
             <p>{zone.eventSummary}</p>
           </div>
         </div>
-        {state.venueId === "harbour" && state.screenRequestState !== "approved" ? (
+        {state.venueId === "harbour" && state.screenRequestState === "idle" ? (
           <Button
             variant="secondary"
             full
-            onClick={() => {
-              state.requestScreen("screen-7", "Cowboys vs Broncos");
-              state.setScreenRequestState("approved");
-            }}
+            onClick={() => state.requestScreen("screen-7", "Cowboys vs Broncos")}
           >
             Request the Cowboys game
           </Button>
+        ) : state.screenRequestState === "requested" ? (
+          <div className="info-strip" aria-live="polite">
+            <Clock3 size={20} />
+            <span>
+              <strong>Request sent</strong> · venue staff controls approval and scheduling.
+            </span>
+          </div>
         ) : state.screenRequestState === "approved" ? (
           <div className="success-panel">
             <CheckCircle2 size={20} />

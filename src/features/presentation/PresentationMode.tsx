@@ -12,18 +12,16 @@ export function PresentationMode() {
 
   const move = (direction: 1 | -1) => {
     const nextIndex = Math.max(0, Math.min(steps.length - 1, state.presentationStep + direction));
-    const next = steps[nextIndex]!;
-    if (next.scenario) {
-      state.loadScenario(next.scenario);
-      useDemoStore.setState({ presentationActive: true, presentationStep: nextIndex });
-    } else {
-      useDemoStore.setState({ presentationStep: nextIndex });
-    }
-    navigate(next.route);
+    state.applyPresentationStep(nextIndex);
   };
 
   useEffect(() => {
+    navigate(step.route);
+  }, [navigate, step.route]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (document.querySelector('[role="dialog"]')) return;
       if (event.key === "Escape") state.exitPresentation();
       if (event.key === "ArrowRight") move(1);
       if (event.key === "ArrowLeft") move(-1);
