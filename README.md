@@ -1,112 +1,119 @@
-# Star Local Concept
+# Star Local Concept v0.2.1
 
-**An independent, unofficial prototype for an AI-enabled hospitality member experience.**
+**An independent, unofficial prototype for a customer-facing hospitality operating layer.**
 
-Star Local is a polished, mobile-first meeting showpiece that demonstrates one proposition:
+Star Local coordinates the choices that shape a pub visit—venue zone, table, food, drinks, entertainment, courtesy transport, service and rewards—while keeping the customer in control and safety-sensitive decisions with venue staff.
 
-> Tell the venue what kind of night you want, and the system coordinates the visit around you.
+> Tell the venue what kind of night you want.
 
-The prototype makes a complete hospitality journey tangible across booking, seating, ordering, group coordination, courtesy transport, screen requests, rewards, service, accessibility and customer-controlled personalisation.
+![Star Local v0.2.1 desktop Presentation Mode using the synthetic Alex Morgan journey](docs/screenshots/home-desktop.png)
 
-![Star Local desktop presentation showing the synthetic Alex Morgan flagship journey](docs/screenshots/home-desktop.png)
+_Every visible person, venue, layout, product, price, event, balance and service state is fabricated._
 
-_Original prototype capture. All visible people, venues, times, balances and service states are synthetic._
+## Status and safety boundary
 
-## Important status
+- This is a concept prototype, not a production product or an official Star Group service.
+- It has no backend and makes no live AI, phone, POS, booking, payment, transport, location, gaming or venue-system calls.
+- Alcohol and serious-allergy flows visibly require human review. The prototype never supplies alcohol or claims an RSA decision.
+- It contains no real customer, employee, venue, route, security, exclusion, payment or gaming data.
+- Gaming-machine reservation, cashless gaming, gambling marketing and gaming controls are intentionally excluded.
 
-- This is a **concept prototype**, not a production product.
-- It is **not an official Star Group product** and is not connected to, approved by, sponsored by or endorsed by Star Group.
-- All people, venues, tables, layouts, menus, prices, events, promotions, rewards, routes and service states are **fabricated**.
-- It does not process real bookings, payments, alcohol orders, loyalty records, identities or transport requests.
-- It has no backend and makes no live AI, POS, booking, payment, location, bus, phone, gaming or venue-system calls.
+## What v0.2 demonstrates
 
-## Experience
+- Meaningfully different Bistro, Sports Bar, Public Bar, Outdoor and Function zones
+- Zone-aware table maps, customer filters, access attributes and eight event-layout presets
+- **Watch Tonight** schedules with locked, scheduled and requestable screens, table sightlines and local phone-audio simulation
+- Separate food and drinks experiences, staff-controlled drink review, identified group rounds and combined order status
+- Persistent **Table Service** requests routed to a venue function rather than a fabricated employee
+- A visit-stage-aware Home screen and venue-local Tonight timeline
+- Structured **Ask Star** workflows that can coordinate multiple deterministic actions
+- A disclosed simulated telephone receptionist that writes into the same visit plan and transfers serious-allergy questions to a human
+- Controllable marketing explanations, expanded rewards, receipts and customer-managed memory
+- Customer-initiated bottle-shop collection with collection-counter age confirmation
+- A 16-step guided presentation mode and a locally rendered QR link to the public prototype
 
-The six destinations keep the current or next customer action prominent:
+## Synthetic meeting journeys
 
-- **Home** - contextual next action and the Tonight timeline
-- **Visit** - venue, booking, customer-safe floor plan, table and check-in
-- **Order** - venue-local menu, specials, modifications, group order and simulated split payment
-- **Ride** - inbound and return windows plus a privacy-preserving staged tracker
-- **Rewards** - fabricated points, draw entries, vouchers and a non-functional demo card
-- **Me** - memories, communications, accessibility, service requests and prototype status
+- **Alex Morgan / Harbour Family Hotel** — family Bistro visit, Table 23, barbecue-base parmigiana, Cowboys viewing, courtesy transport and member draw
+- **Jordan Lee / Northside Sports Hotel** — Sports Bar, UFC main card, event screens and participant-controlled group round
+- **Taylor Smith / Hinterland Local** — low table, step-free route, accessible transport, community trivia and bottle-shop collection
 
-**Ask Star** is a deterministic, scripted assistant. It converts a supported phrase into a visible structured result before updating any demo state and always keeps human help available.
+Use **Demo Controls** to load a journey or tune the simulated day, time, layout, booking, order, service, screen, transport, marketing, rewards, phone and collection states. **Reset demo** restores the v0.2.1 flagship defaults.
 
-## Three deliberately different journeys
+## Synthetic prototype views
 
-- **Alex Morgan / Harbour Family Hotel** - the flagship Thursday family visit, Table 23, a barbecue-base parmigiana, Cowboys viewing and courtesy transport
-- **Jordan Lee / Northside Sports Hotel** - an event-led Sports Bar visit with UFC, Broncos, group tables and later food
-- **Taylor Smith / Hinterland Local** - an accessibility-led community visit with a low table, step-free path, trivia and accessible courtesy-bus capacity
+| Flagship mobile Home                                                                | Joined-table floor plan                                                                              |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| ![Flagship mobile Home](docs/screenshots/home-mobile-v0.2.1.png)                    | ![Joined group with individually selectable tables](docs/screenshots/joined-table-mobile-v0.2.1.png) |
+| Table Service request                                                               | Telephone receptionist                                                                               |
+| ![Customer Table Service request](docs/screenshots/table-service-mobile-v0.2.1.png) | ![Synthetic telephone receptionist](docs/screenshots/phone-receptionist-mobile-v0.2.1.png)           |
 
-Open **Demo Controls** to load any journey, move the simulated clock, change venue or persona, and adjust booking, order, ride, kitchen, service, staff-review and sold-out states. **Reset demo** restores Alex's flagship scenario and persisted state.
+All captures are generated from the deterministic prototype fixtures. Additional evidence for zone selection, Watch Tonight, drinks and the group round is stored in `docs/screenshots/`.
 
 ## Local setup
 
-Requirements: Node.js 22.12 or newer. CI and deployment use Node.js 24.
+Requirements: Node.js 22.12 or newer. CI and Pages deployment use Node.js 24.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Vite prints the local address. All runtime data comes from local TypeScript fixtures and persists under the browser key `star-local-demo-v1`.
+Vite prints the local URL. Runtime state persists under the versioned browser key `star-local-demo-v1`; earlier state is migrated to the v0.2.1 schema with safe defaults.
+
+To clear v0.2 state, use **Demo Controls → Reset demo**, or run this in the browser console and reload:
+
+```js
+localStorage.removeItem("star-local-demo-v1");
+location.reload();
+```
 
 ## Commands
 
 ```bash
 npm run dev          # development server
 npm run build        # strict TypeScript build and Vite production bundle
-npm run preview      # preview the production build
+npm run preview      # production preview
+npm run format       # write Prettier formatting
+npm run format:check # check formatting
 npm run lint         # ESLint
 npm run typecheck    # strict TypeScript checks
 npm run test         # Vitest unit and component tests
 npm run test:e2e     # Playwright mobile and desktop journeys
-npm run format:check # Prettier drift check
+npm audit            # dependency advisory report
 ```
 
-For a first local Playwright run:
+For the first browser-test run, install Chromium with `npx playwright install chromium`.
 
-```bash
-npx playwright install chromium
-npm run test:e2e
+## Architecture at a glance
+
+```text
+React presentation shell
+  → GitHub Pages-safe HashRouter and lazy route chunks
+  → typed page and feature modules
+  → Zustand transitions and v0.1 → v0.2 persistence migration
+  → deterministic fixture repository
+  → synthetic TypeScript fixture domains
 ```
+
+There is no runtime network dependency. `qrcode.react` renders the public prototype link as a local SVG; Lucide provides local vector icons. See [Architecture](docs/ARCHITECTURE.md) and [Fixture data](docs/FIXTURE_DATA.md).
 
 ## GitHub Pages deployment
 
-`vite.config.ts` sets the production base path to `/star-local-concept/`. The deployment workflow builds `dist`, uploads a Pages artifact and deploys it after a push to `main`.
+`vite.config.ts` retains the production base `/star-local-concept/`. `.github/workflows/deploy-pages.yml` runs `npm ci`, Vitest and the production build on `main`, uploads `dist`, then deploys through GitHub Pages.
 
-Expected URL: <https://wowcorey.github.io/star-local-concept/>
+Public URL: <https://wowcorey.github.io/star-local-concept/>
 
-Repository administrators may need to set **Settings -> Pages -> Build and deployment -> Source** to **GitHub Actions** once. No environment variables or secrets are required.
-
-## Project structure
-
-```text
-src/
-  app/          Router and presentation shell
-  components/   Reusable accessible UI primitives
-  features/     Scripted assistant and presenter controls
-  fixtures/     Typed synthetic members, venues, layouts and menus
-  pages/        Six primary destinations and the floor-plan flow
-  services/     Deterministic fixture repository and mock delays
-  state/        Persisted demo state and explicit transitions
-  styles/       Design tokens, responsive presentation frame and components
-  types/        Domain models
-tests/e2e/      Principal Playwright journeys
-docs/           Architecture, demo, fixtures, accessibility, privacy and safety
-```
-
-## Safety and fixture rules
-
-Every exported top-level fixture includes `synthetic: true`. Fixture validation checks cross-entity references. Gaming areas are not customer-visible recommendation inputs. Alcohol and allergy states require human confirmation. Ride status never reveals another passenger, address, stop, full route or precise continuous movement.
-
-Do not commit the private design-document PDF, its screenshots, reference photographs, real venue layouts, real identifiers or extracted company assets. See [Public Data and Asset Rules](docs/PUBLIC_DATA_AND_ASSET_RULES.md) and [Security and Privacy](docs/SECURITY_AND_PRIVACY.md).
+Repository administrators only need **Settings → Pages → Build and deployment → Source → GitHub Actions** if that source is not already selected. No secrets or environment variables are required.
 
 ## Documentation
 
+- [v0.2 changelog](docs/V0_2_CHANGELOG.md)
 - [Architecture](docs/ARCHITECTURE.md)
+- [Presentation guide](docs/PRESENTATION_GUIDE.md)
 - [Meeting demo guide](docs/DEMO_GUIDE.md)
+- [Zone and screen model](docs/ZONE_AND_SCREEN_MODEL.md)
+- [Drink and RSA prototype](docs/DRINK_AND_RSA_PROTOTYPE.md)
 - [Fixture data](docs/FIXTURE_DATA.md)
 - [Accessibility](docs/ACCESSIBILITY.md)
 - [Security and privacy](docs/SECURITY_AND_PRIVACY.md)
@@ -114,8 +121,11 @@ Do not commit the private design-document PDF, its screenshots, reference photog
 
 ## Known limitations
 
-- All service latency and outcomes are deterministic client-side simulations.
-- Payment, check-in, digital card, phone audio, alcohol ordering, allergy escalation, bottle-shop collection and transport are representational only.
-- The assistant recognises a small, documented intent catalogue and is not a language model.
-- The floor plans are original simplified geometry, not operational maps.
-- Production authentication, consent records, integrations, regulated workflows, analytics and staff tools are intentionally excluded.
+- All outcomes, timing, waveform motion and transcripts are deterministic simulations.
+- The assistant is a scripted intent catalogue, not a language model.
+- Floor plans are original simplified geometry, not operational venue maps.
+- Payments, supply, collection, calls, check-in, rewards, draws and transport never leave the browser.
+- Production integrations, consent records, authentication, staff tooling, analytics and a venue-layout editor are excluded.
+- A future regulated gaming module may be discussed in documentation only; it is not implemented here.
+
+Do not commit the private design PDF, its embedded screenshots, real venue imagery or extracted company assets. The repository contains only the new synthetic implementation and original presentation captures.

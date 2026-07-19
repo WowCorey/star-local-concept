@@ -21,19 +21,19 @@ test("flagship Thursday journey completes and resets", async ({ page }) => {
   await expect(page.getByText("Booked in demo")).toBeVisible();
 
   await page.getByRole("link", { name: "Visit" }).click();
-  await page.getByRole("button", { name: "Simulate Table 23 check-in" }).click();
+  await page.getByRole("button", { name: "Check in at Table 23" }).click();
   await expect(page.getByText("Checked in", { exact: true }).first()).toBeVisible();
 
   await page.getByRole("link", { name: "Order" }).click();
   await page.getByRole("button", { name: "Review Chicken parmigiana" }).click();
   await page.getByRole("button", { name: /Use my usual/ }).click();
-  await expect(page.getByText(/Barbecue base · chips and salad · no dressing/)).toBeVisible();
-  await page.getByRole("button", { name: "Confirm order" }).click();
-  await expect(page.getByText("Simulated order confirmed")).toBeVisible();
+  await expect(page.getByText(/Barbecue base, chips and salad, no dressing/)).toBeVisible();
+  await page.getByRole("button", { name: "Confirm food order" }).click();
+  await expect(page.getByText("Order confirmed", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Visit" }).click();
   await page.getByRole("button", { name: "Request the Cowboys game" }).click();
-  await expect(page.getByText("Request approved in the demo.")).toBeVisible();
+  await expect(page.getByText(/Request sent.*venue staff controls approval/)).toBeVisible();
 
   await page.getByRole("link", { name: "Rewards" }).click();
   await expect(page.getByText("DEMO-10482")).toBeVisible();
@@ -47,6 +47,7 @@ test("flagship Thursday journey completes and resets", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText("Harbour Family Hotel - Thursday evenings")).toBeVisible();
 
+  await page.getByRole("button", { name: "Demo Controls", exact: true }).click();
   await page.getByRole("button", { name: "Reset demo" }).click();
   await page.getByRole("link", { name: "Home" }).click();
   await expect(page.getByRole("heading", { name: "Good evening, Alex" })).toBeVisible();
@@ -57,7 +58,10 @@ test("presenter can switch persona and venue", async ({ page }) => {
   await page.getByRole("button", { name: /Accessibility/ }).click();
   await expect(page.getByRole("heading", { name: "Good evening, Taylor" })).toBeVisible();
   await expect(
-    page.getByRole("main").getByText("Hinterland Local", { exact: true }).first(),
+    page
+      .getByRole("main")
+      .getByText(/Hinterland Local/)
+      .first(),
   ).toBeVisible();
 });
 

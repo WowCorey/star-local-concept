@@ -37,11 +37,6 @@ export function RidePage() {
   const activeIndex = stages.findIndex((stage) => stage.state === state.rideState);
   const approaching = ["en-route", "arriving", "boarded", "completed"].includes(state.rideState);
 
-  const advance = () => {
-    const next = stages[Math.min((activeIndex < 0 ? 0 : activeIndex) + 1, stages.length - 1)];
-    if (next) state.setRideState(next.state);
-  };
-
   return (
     <div className="page-stack">
       <PageIntro
@@ -183,14 +178,10 @@ export function RidePage() {
                 );
               })}
             </ol>
-            <Button
-              variant="secondary"
-              full
-              onClick={advance}
-              disabled={state.rideState === "completed"}
-            >
-              Advance demo status
-            </Button>
+            <p className="microcopy">
+              Vehicle and trip progression is venue-controlled in Demo Controls. Customers can
+              request or change their own ride windows here.
+            </p>
           </Card>
 
           <Card>

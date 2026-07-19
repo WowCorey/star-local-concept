@@ -8,181 +8,243 @@ import {
   MapPin,
   Sparkles,
   Tv,
+  Utensils,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { Badge, Button, Card, DemoDataLabel, SectionHeading, StatusDot } from "../components/ui";
+import { Badge, Button, Card, SectionHeading, StatusDot } from "../components/ui";
+import { applyLayoutPreset, getHomeNextAction } from "../features/v02/model";
 import { demoRepository } from "../services/demoRepository";
 import { useDemoStore } from "../state/demoStore";
+
+const stageCopy = {
+  "before-visit": {
+    eyebrow: "Your next visit",
+    title: "Your usual Thursday night?",
+    detail: "Your table, dinner, sport and ride are ready to shape.",
+  },
+  approaching: {
+    eyebrow: "Approaching venue",
+    title: "Everything is holding for arrival",
+    detail: "Your ride is approaching and the kitchen estimate is current.",
+  },
+  "in-venue": {
+    eyebrow: "Tonight mode",
+    title: "Your table is the operating centre",
+    detail: "Orders, screens, service and the ride home stay together.",
+  },
+  "after-visit": {
+    eyebrow: "Visit complete",
+    title: "Keep what worked",
+    detail: "Review the receipt, points, ride and memories from the night.",
+  },
+};
 
 export function HomePage() {
   const navigate = useNavigate();
   const [confirming, setConfirming] = useState(false);
-  const personaId = useDemoStore((state) => state.personaId);
-  const venueId = useDemoStore((state) => state.venueId);
-  const stage = useDemoStore((state) => state.stage);
-  const bookingState = useDemoStore((state) => state.bookingState);
-  const orderState = useDemoStore((state) => state.orderState);
-  const rideState = useDemoStore((state) => state.rideState);
-  const screenRequestState = useDemoStore((state) => state.screenRequestState);
-  const selectedTableId = useDemoStore((state) => state.selectedTableId);
-  const partySize = useDemoStore((state) => state.partySize);
-  const arrivalTime = useDemoStore((state) => state.arrivalTime);
-  const drawEntries = useDemoStore((state) => state.drawEntries);
-  const activePromotion = useDemoStore((state) => state.activePromotion);
-  const confirmVisit = useDemoStore((state) => state.confirmVisit);
-  const cancelVisit = useDemoStore((state) => state.cancelVisit);
-  const persona = demoRepository.getPersona(personaId);
-  const venue = demoRepository.getVenue(venueId);
-  const layout = demoRepository.getLayout(venueId);
-  const selectedTable = layout.tables.find((table) => table.id === selectedTableId);
-  const inVenue = stage === "in-venue" || bookingState === "checked-in";
+  const state = useDemoStore();
+  const persona = demoRepository.getPersona(state.personaId);
+  const venue = demoRepository.getVenue(state.venueId);
+  const layout = demoRepository.getLayout(state.venueId);
+  const table = layout.tables.find((item) => item.id === state.selectedTableId);
+  const zone = venue.zones.find((item) => item.id === state.selectedZoneId);
+  const campaign =
+    demoRepository
+      .getCampaigns(state.venueId)
+      .find((item) => item.level === state.marketingLevel) ??
+    demoRepository.getCampaigns(state.venueId)[0];
+  const copy = stageCopy[state.stage];
+  const bookingConfirmed = ["confirmed", "changed", "checked-in", "completed"].includes(
+    state.bookingState,
+  );
+  const next = getHomeNextAction({
+    bookingState: state.bookingState,
+    selectedZoneId: state.selectedZoneId,
+    selectedTableValid: Boolean(
+      table &&
+      table.zoneId === state.selectedZoneId &&
+      applyLayoutPreset(table, state.layoutPresetId),
+    ),
+    courtesyBus: venue.services.courtesyBus,
+    stage: state.stage,
+    rideBooked: state.rideBooked,
+    orderState: state.orderState,
+    groupParticipantStates: state.groupRound.participants.map(
+      (participant) => participant.acceptance,
+    ),
+    screenRequestState: state.screenRequestState,
+    returnPassengers: state.returnPassengers,
+    serviceRequestState: state.serviceRequestState,
+  });
 
-  const handleConfirm = async () => {
+  const confirm = async () => {
     setConfirming(true);
     await demoRepository.confirmBooking();
-    confirmVisit();
+    state.confirmVisit();
     setConfirming(false);
   };
-
-  const bookingConfirmed = ["confirmed", "changed", "checked-in", "completed"].includes(
-    bookingState,
-  );
+  const runNext = () =>
+    next.route === "service" ? state.setServiceOpen(true) : navigate(next.route);
 
   return (
-    <div className="page-stack">
+    <div className="page-stack home-v02">
       <header className="home-greeting">
         <div>
-          <p className="eyebrow">{inVenue ? "Tonight mode" : "Your next visit"}</p>
+          <p className="eyebrow">{copy.eyebrow}</p>
           <h1>Good evening, {persona.firstName}</h1>
         </div>
-        <span className="avatar" aria-label={`${persona.fullName}, synthetic demo member`}>
+        <span className="avatar" aria-label={`${persona.fullName}, demo member`}>
           {persona.initials}
         </span>
       </header>
 
-      <Card className="hero-card">
+      <Card className={`hero-card journey-hero stage-${state.stage}`}>
         <Badge tone="gold">
           {bookingConfirmed ? (
             <>
-              <CalendarCheck size={13} /> {inVenue ? "Checked in" : "Visit confirmed"}
+              <CalendarCheck size={13} />
+              {state.bookingState === "checked-in" ? "Checked in" : "Visit confirmed"}
             </>
           ) : (
             "Held for you"
           )}
         </Badge>
-        <h2>
-          {inVenue
-            ? `You're settled at ${selectedTable ? `Table ${selectedTable.displayNumber}` : persona.preferredTableDisplay}`
-            : "Your usual Thursday night?"}
-        </h2>
-        <p>{venue.name}</p>
+        <h2>{copy.title}</h2>
+        <p>{copy.detail}</p>
         <div className="hero-details">
           <span>
             <MapPin size={16} />
-            {selectedTable
-              ? `Table ${selectedTable.displayNumber} · ${persona.preferredZone}`
-              : persona.preferredTableDisplay}
+            {venue.shortName} · {zone?.name}
           </span>
           <span>
             <Clock3 size={16} />
-            {partySize} people · {arrivalTime}
+            {table ? `Table ${table.displayNumber}` : "Choose a table"} · {state.partySize} people
           </span>
           <span>
             <Sparkles size={16} />
             {venue.event.title} · {venue.event.time}
           </span>
         </div>
-        <div className="hero-actions">
-          {!bookingConfirmed ? (
-            <Button onClick={handleConfirm} disabled={confirming}>
-              {confirming ? "Confirming demo..." : "Confirm visit"}
-            </Button>
-          ) : (
-            <Button onClick={() => navigate("/visit")}>
-              {inVenue ? "View tonight's plan" : "Review visit"}
-              <ArrowRight size={16} />
-            </Button>
-          )}
-          <Button variant="secondary" onClick={() => navigate("/visit")}>
-            Change details
+        <div className="next-best-action">
+          <span>Next best action</span>
+          <strong>{next.label}</strong>
+          <Button onClick={runNext}>
+            {next.label}
+            <ArrowRight size={16} />
           </Button>
-          {!bookingConfirmed ? (
-            <Button variant="ghost" onClick={cancelVisit}>
-              Not this week
+        </div>
+        {!bookingConfirmed ? (
+          <div className="hero-actions">
+            <Button onClick={confirm} disabled={confirming}>
+              {confirming ? "Confirming…" : "Confirm visit"}
             </Button>
-          ) : null}
+            <Button variant="secondary" onClick={() => navigate("/visit/zones")}>
+              Choose venue zone
+            </Button>
+          </div>
+        ) : null}
+      </Card>
+
+      <Card className={`tonight-venue-card venue-${state.venueId}`}>
+        <div className="tonight-venue-art" aria-hidden="true">
+          <span>{venue.shortName.slice(0, 1)}</span>
+          <i />
+          <i />
+          <i />
+        </div>
+        <div>
+          <p className="eyebrow">Tonight at {venue.shortName}</p>
+          <h2>{venue.event.title}</h2>
+          <p>{venue.event.detail}</p>
+          <div className="venue-tags">
+            <Badge tone="gold">{zone?.atmosphere}</Badge>
+            {venue.services.courtesyBus ? (
+              <Badge tone="teal">Courtesy bus</Badge>
+            ) : (
+              <Badge>Safe-travel help</Badge>
+            )}
+            {venue.services.bottleShopPickup ? <Badge>Collection</Badge> : null}
+          </div>
         </div>
       </Card>
 
       <section aria-labelledby="tonight-heading">
         <SectionHeading
-          title={inVenue ? "Tonight" : "Your Thursday plan"}
-          action={<Link to="/visit">Edit</Link>}
+          title={state.stage === "after-visit" ? "Visit summary" : "Tonight"}
+          action={<Link to="/visit">Edit plan</Link>}
         />
         <Card>
-          <ol className="timeline">
+          <ol className="timeline timeline-v02">
+            {venue.services.courtesyBus ? (
+              <li>
+                <time>6:15–6:45</time>
+                <StatusDot tone={state.rideState === "delayed" ? "amber" : "teal"} />
+                <span>
+                  <strong>
+                    {state.stage === "approaching" ? "Bus approaching" : "Courtesy-bus pickup"}
+                  </strong>
+                  <small>{state.inboundPassengers} passengers · your own private status</small>
+                </span>
+              </li>
+            ) : null}
             <li>
-              <time>6:15-6:45</time>
-              <StatusDot tone={rideState === "delayed" ? "amber" : "teal"} />
+              <time>{state.arrivalTime}</time>
+              <StatusDot tone={state.stage === "in-venue" ? "green" : "burgundy"} />
               <span>
-                <strong>Courtesy-bus pickup</strong>
+                <strong>
+                  {state.stage === "in-venue"
+                    ? `At Table ${table?.displayNumber}`
+                    : `Arrive in ${zone?.name}`}
+                </strong>
                 <small>
-                  {rideState === "delayed"
-                    ? "Updated window - open Ride for details"
-                    : "2 passengers · estimated window only"}
-                </small>
-              </span>
-            </li>
-            <li>
-              <time>6:45 pm</time>
-              <StatusDot tone={inVenue ? "green" : "burgundy"} />
-              <span>
-                <strong>{inVenue ? "Checked in" : "Arrive"}</strong>
-                <small>
-                  {selectedTable
-                    ? `Table ${selectedTable.displayNumber}`
-                    : persona.preferredTableDisplay}{" "}
-                  · {persona.preferredZone}
+                  {zone?.atmosphere} · {zone?.serviceModel?.drinks.replaceAll("-", " ")}
                 </small>
               </span>
             </li>
             <li>
               <time>7:00 pm</time>
-              <StatusDot tone={orderState === "draft" ? "muted" : "green"} />
+              <StatusDot tone={state.orderState === "draft" ? "muted" : "green"} />
               <span>
-                <strong>Dinner order</strong>
+                <strong>
+                  {state.orderState === "draft" ? "Food and group round" : "Order in progress"}
+                </strong>
                 <small>
-                  {orderState === "draft"
-                    ? "Your usual meal is ready to review"
-                    : `Demo order · ${orderState.replaceAll("-", " ")}`}
-                </small>
-              </span>
-            </li>
-            <li>
-              <time>{venueId === "harbour" ? "7:30 pm" : venue.event.time}</time>
-              <StatusDot tone={screenRequestState === "approved" ? "green" : "burgundy"} />
-              <span>
-                <strong>{venueId === "harbour" ? "Cowboys game" : venue.event.title}</strong>
-                <small>
-                  {venueId === "harbour" ? "Screen 7 · family viewing area" : venue.event.detail}
+                  Kitchen {state.kitchenWaitTime} min · Bar {state.barWaitTime} min
                 </small>
               </span>
             </li>
             <li>
               <time>{venue.event.time}</time>
-              <StatusDot tone="amber" />
+              <StatusDot
+                tone={
+                  state.screenRequestState === "approved" ||
+                  state.screenRequestState === "requested"
+                    ? "green"
+                    : "amber"
+                }
+              />
               <span>
                 <strong>{venue.event.title}</strong>
-                <small>{venue.event.detail}</small>
+                <small>{state.screenRequestContent ?? zone?.screenSummary}</small>
               </span>
             </li>
-            {venue.services.courtesyBus ? (
+            {state.serviceRequest ? (
               <li>
-                <time>10:00-10:30</time>
-                <StatusDot tone="teal" />
+                <time>Now</time>
+                <StatusDot tone={state.serviceRequest.state === "completed" ? "green" : "teal"} />
                 <span>
-                  <strong>Return courtesy bus</strong>
-                  <small>Private status appears only when approaching</small>
+                  <strong>{state.serviceRequest.kind}</strong>
+                  <small>{state.serviceRequest.state.replaceAll("-", " ")}</small>
+                </span>
+              </li>
+            ) : null}
+            {state.stage === "after-visit" ? (
+              <li>
+                <time>Complete</time>
+                <StatusDot tone="green" />
+                <span>
+                  <strong>Receipt and points ready</strong>
+                  <small>Review what to remember next time</small>
                 </span>
               </li>
             ) : null}
@@ -190,47 +252,86 @@ export function HomePage() {
         </Card>
       </section>
 
-      <section aria-label="Member summary" className="stat-grid">
-        <div className="stat-card">
-          <span>Member points</span>
-          <strong>{persona.points.toLocaleString()}</strong>
-          <DemoDataLabel />
-        </div>
-        <div className="stat-card">
-          <span>Draw entries</span>
-          <strong>{drawEntries}</strong>
-          <DemoDataLabel />
-        </div>
-      </section>
+      {campaign &&
+      state.marketingInteraction !== "dismissed" &&
+      state.marketingInteraction !== "category-disabled" ? (
+        <Card className="offer-card marketing-card">
+          <div className="offer-icon">
+            <Gift size={21} />
+          </div>
+          <Badge tone="gold">{campaign.level} offer</Badge>
+          <h2>{campaign.title}</h2>
+          <p>{campaign.body}</p>
+          <details>
+            <summary>Why am I seeing this?</summary>
+            <p>{campaign.basis.join(" · ")}</p>
+            <small>Never uses: {campaign.excludedInputs.join(", ")}.</small>
+          </details>
+          <div className="marketing-actions">
+            <button type="button" onClick={() => state.setMarketingInteraction("saved")}>
+              Save offer
+            </button>
+            <button type="button" onClick={() => state.setMarketingInteraction("booked")}>
+              Book using offer
+            </button>
+            <button type="button" onClick={() => state.setMarketingInteraction("dismissed")}>
+              Not for me
+            </button>
+            <button
+              type="button"
+              onClick={() => state.setMarketingInteraction("category-disabled")}
+            >
+              Stop this type
+            </button>
+          </div>
+        </Card>
+      ) : (
+        <Card className="offer-dismissed">
+          <p>This offer is hidden. You can re-enable categories in Me.</p>
+        </Card>
+      )}
 
-      <Card className="offer-card">
-        <div className="offer-icon">
-          <Gift size={21} />
-        </div>
-        <Badge tone="gold">Relevant food offer</Badge>
-        <h2>{activePromotion}</h2>
-        <p>Use it on a qualifying fictional meal during this demonstration visit.</p>
-        <p className="explain-line">
-          <strong>Why this?</strong> {persona.firstName} enabled food offers and saved a venue-local
-          food preference. Gaming, RSA and security data are excluded.
-        </p>
-      </Card>
-
-      <section className="quick-grid" aria-label="Quick actions">
+      <section className="quick-grid quick-grid-v02" aria-label="Quick actions">
+        <Link className="quick-action" to="/visit/watch">
+          <span>
+            <Tv size={20} />
+          </span>
+          <strong>Watch Tonight</strong>
+          <small>Near Table {table?.displayNumber}</small>
+        </Link>
+        <Link className="quick-action" to="/order/group">
+          <span>
+            <Utensils size={20} />
+          </span>
+          <strong>Group order</strong>
+          <small>
+            {
+              state.groupRound.participants.filter(
+                (participant) => participant.acceptance === "pending",
+              ).length
+            }{" "}
+            awaiting
+          </small>
+        </Link>
         <Link className="quick-action" to="/ride">
           <span>
             <BusFront size={20} />
           </span>
-          <strong>Ride status</strong>
-          <small>{venue.services.courtesyBus ? "Private timing" : "Not usual here"}</small>
+          <strong>Ride home</strong>
+          <small>{venue.services.courtesyBus ? state.returnWindow : "Ask staff"}</small>
         </Link>
-        <Link className="quick-action" to="/visit">
+        <button
+          className="quick-action"
+          type="button"
+          data-dialog-trigger="service"
+          onClick={() => state.setServiceOpen(true)}
+        >
           <span>
-            <Tv size={20} />
+            <Utensils size={20} />
           </span>
-          <strong>Screen request</strong>
-          <small>Zone-aware</small>
-        </Link>
+          <strong>Table Service</strong>
+          <small>{state.serviceRequest?.state ?? "Available in venue"}</small>
+        </button>
       </section>
     </div>
   );

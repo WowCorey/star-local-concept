@@ -4,28 +4,33 @@ The prototype targets a strong WCAG 2.2 AA baseline.
 
 ## Implemented
 
-- semantic headings, main, footer and labelled navigation landmarks;
-- a keyboard-visible skip link;
-- minimum 44 px primary touch targets;
-- visible focus rings;
-- labelled controls and accessible switch semantics;
-- `aria-live` status for ride and toast changes;
-- Escape handling for the assistant and presenter sheets;
-- table selection through both the map and a text list;
-- state labels in addition to colour;
-- sufficient contrast across the burgundy, teal, gold and neutral palette;
-- reduced-motion support from both system preference and customer setting;
-- larger-text and higher-contrast customer settings;
-- step-free, low-table, wheelchair-space and accessible-bus preferences without medical-detail collection.
+- semantic headings, main/footer landmarks and labelled primary and section navigation;
+- a skip link that is the first keyboard focus target on desktop and mobile;
+- visible focus indication and minimum 44 px primary touch targets;
+- labelled dialog surfaces with focus entry, trapping, trigger restoration and Escape dismissal for non-urgent flows;
+- inert background content while Ask Star, Demo Controls, Table Service or Phone Receptionist is open;
+- keyboard-operable zone cards, filters, table maps and equivalent table lists;
+- complete table labels describing number, capacity, zone, type, atmosphere, step-free access, screen sightline and match state;
+- screen rules and request status expressed in text and icons, never colour alone;
+- drink and service progress rendered with explicit labels and live status regions;
+- a readable phone transcript independent of the decorative local waveform;
+- customer-controlled larger text, higher contrast and reduced motion;
+- presentation mode with labelled Previous, Next and Exit actions plus Escape support;
+- QR destination repeated as visible link text;
+- viewport checks across every v0.2 route and a bounded desktop phone frame that keeps sticky navigation clear of actions.
 
-## Keyboard checklist
+## Keyboard audit
 
-1. Tab exposes **Skip to content** first.
-2. All six primary destinations, Ask Star and Demo Controls are reachable.
-3. Booking controls, floor-plan list, order modifiers, ride windows and memory actions work with keyboard input.
-4. Escape closes sheets.
-5. Focus remains visible on light and burgundy surfaces.
+1. Tab first reveals **Skip to content**.
+2. All primary destinations, subnavigation, Ask Star, Table Service and Demo Controls are reachable.
+3. Zone radio cards, table buttons, order modifiers, round acceptance, phone playback and state controls operate by keyboard.
+4. Escape closes non-urgent global sheets and guided presentation mode; urgent assistance first displays a clear warning and preserves the request.
+5. Focus remains visible on burgundy, teal, gold and neutral surfaces.
 
-## Known prototype limitation
+## Preference boundary
 
-The custom sheets close with Escape and labelled controls but do not implement a full production focus trap or focus-return manager. A production design system should provide a thoroughly audited dialog primitive.
+The prototype stores functional preferences such as step-free access, a low table, larger text, contrast and reduced motion. It does not infer a diagnosis, require medical detail or use accessibility settings for marketing.
+
+## Remaining verification
+
+The reusable prototype dialog manager is covered by keyboard regression tests. A production implementation should still adopt an audited dialog primitive and complete manual screen-reader testing with NVDA, JAWS, VoiceOver and TalkBack.
