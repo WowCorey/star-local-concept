@@ -38,6 +38,11 @@ test("Alex orders food and a controlled drink", async ({ page }) => {
   await page.getByRole("button", { name: "Add to my order" }).click();
   await page.getByRole("button", { name: "Submit for review" }).click();
   await expect(page.getByText("Staff confirmation required.")).toBeVisible();
+  await expect(
+    page.getByRole("button", {
+      name: /Demo accept|Approve drink|Accept drink|Modify drink|Decline drink/i,
+    }),
+  ).toHaveCount(0);
 });
 
 test("Alex creates a participant-controlled group round", async ({ page }) => {
