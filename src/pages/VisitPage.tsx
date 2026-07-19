@@ -3,7 +3,6 @@ import {
   Accessibility,
   CheckCircle2,
   Clock3,
-  Info,
   Map,
   ShieldCheck,
   Tv2,
@@ -11,6 +10,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge, Button, Card, PageIntro, SectionHeading, Stepper, Toggle } from "../components/ui";
+import { VisitNav } from "../components/VisitNav";
 import { demoRepository } from "../services/demoRepository";
 import { useDemoStore } from "../state/demoStore";
 import type { VenueId } from "../types/domain";
@@ -22,10 +22,10 @@ export function VisitPage() {
   const venue = demoRepository.getVenue(state.venueId);
   const venues = demoRepository.getVenues();
   const layout = demoRepository.getLayout(state.venueId);
+  const zone =
+    venue.zones.find((item) => item.id === state.selectedZoneId) ??
+    venue.zones.find((item) => item.customerVisible)!;
   const selectedTable = layout.tables.find((table) => table.id === state.selectedTableId);
-  const selectedScreen = venue.screens.find((screen) =>
-    selectedTable?.nearbyScreenIds.includes(screen.id),
-  );
 
   const saveBooking = async () => {
     setSaving(true);
@@ -35,27 +35,21 @@ export function VisitPage() {
     setSaving(false);
   };
 
-  const bookingTone =
-    state.bookingState === "checked-in"
-      ? "success"
-      : state.bookingState === "held" || state.bookingState === "changed"
-        ? "warning"
-        : "teal";
-
   return (
     <div className="page-stack">
-      <PageIntro eyebrow="Visit planner" title="Shape the night around you">
-        Review the venue, arrival, seating and screen visibility. Every action stays inside this
-        synthetic prototype.
+      <VisitNav />
+      <PageIntro eyebrow="Visit planner" title="Shape the whole night">
+        Choose the venue atmosphere first, then a table, transport and entertainment that genuinely
+        fit that zone.
       </PageIntro>
 
-      <Card>
+      <Card className="venue-story-card">
         <div
           className="venue-banner"
           style={{ "--venue-accent": venue.accent } as React.CSSProperties}
         >
           <div>
-            <Badge tone={bookingTone}>{state.bookingState.replaceAll("-", " ")}</Badge>
+            <Badge tone="gold">{venue.tone}</Badge>
             <h2>{venue.name}</h2>
             <p>{venue.positioning}</p>
           </div>
@@ -82,19 +76,53 @@ export function VisitPage() {
           </select>
         </label>
         <p className="venue-description">{venue.description}</p>
-        <div className="venue-tags">
-          <Badge tone="neutral">{venue.tone}</Badge>
-          {venue.services.courtesyBus ? (
-            <Badge tone="teal">Courtesy bus</Badge>
-          ) : (
-            <Badge>Self-arrival focus</Badge>
-          )}
-          {venue.services.bottleShopPickup ? <Badge>Collection represented</Badge> : null}
+        <div className="tonight-local">
+          <div>
+            <p className="eyebrow">Tonight here</p>
+            <h3>{venue.event.title}</h3>
+            <p>{venue.event.detail}</p>
+          </div>
+          <Badge tone="teal">{venue.event.time}</Badge>
         </div>
       </Card>
 
+      <Card className="selected-zone-card">
+        <SectionHeading
+          title="Your venue zone"
+          action={<Link to="/visit/zones">Compare zones</Link>}
+        />
+        <div className={`zone-mini-visual zone-${zone.slug}`}>
+          <span>{zone.name}</span>
+          <i />
+          <i />
+          <i />
+        </div>
+        <h2>{zone.atmosphere}</h2>
+        <p>{zone.description}</p>
+        <div className="venue-tags">
+          <Badge tone="gold">{zone.noiseLevel} noise</Badge>
+          <Badge>{zone.serviceModel?.food.replaceAll("-", " ")}</Badge>
+          <Badge tone="teal">{zone.suitableTableCount} suitable tables</Badge>
+        </div>
+        <ul className="zone-feature-list">
+          {zone.features?.map((feature) => (
+            <li key={feature}>{feature}</li>
+          ))}
+        </ul>
+        <Button full onClick={() => state.selectZone(zone.id)}>
+          {state.selectedZoneId === zone.id ? `${zone.name} selected` : `Choose ${zone.name}`}
+        </Button>
+      </Card>
+
       <Card>
-        <SectionHeading title="Booking review" />
+        <SectionHeading
+          title="Booking review"
+          action={
+            <Badge tone={state.bookingState === "checked-in" ? "success" : "warning"}>
+              {state.bookingState.replaceAll("-", " ")}
+            </Badge>
+          }
+        />
         <div className="hold-banner">
           <Clock3 size={20} />
           <span>
@@ -104,7 +132,7 @@ export function VisitPage() {
                 : persona.preferredTableDisplay}{" "}
               is held
             </strong>
-            <small>Until 12:00 pm Thursday (fabricated demo deadline)</small>
+            <small>{zone.name} · until 12:00 pm Thursday</small>
           </span>
         </div>
         <div className="field-grid two-columns">
@@ -120,54 +148,37 @@ export function VisitPage() {
               <option>7:30 pm</option>
             </select>
           </label>
-          <label className="field">
-            <span>Preferred zone</span>
-            <select
-              value={state.preferredZone}
-              onChange={(event) => state.setPreferredZone(event.target.value)}
-            >
-              {venue.zones
-                .filter((zone) => zone.customerVisible)
-                .map((zone) => (
-                  <option key={zone.id}>{zone.name}</option>
-                ))}
-            </select>
-          </label>
+          <Stepper
+            label="Party size"
+            value={state.partySize}
+            min={1}
+            max={12}
+            onChange={state.setPartySize}
+          />
         </div>
-        <Stepper
-          label="Party size"
-          value={state.partySize}
-          min={1}
-          max={12}
-          onChange={state.setPartySize}
-        />
         <div className="toggle-list">
           <Toggle
             checked={state.quieterSeating}
             onChange={() => state.toggleBookingPreference("quieterSeating")}
             label="Quieter seating"
-            description="A preference, subject to synthetic availability"
+            description="Highlights genuinely quieter tables"
           />
           <Toggle
             checked={state.highChair}
             onChange={() => state.toggleBookingPreference("highChair")}
             label="High chair"
-            description="Ask the team to confirm at arrival"
+            description="Requires a suitable table and team confirmation"
           />
           <Toggle
             checked={state.screenVisibility}
             onChange={() => state.toggleBookingPreference("screenVisibility")}
             label="Screen visibility"
-            description="Only suitable screens for the selected zone"
+            description="Only real sightlines from the selected table"
           />
         </div>
         <div className="inline-actions booking-actions">
           <Button onClick={saveBooking} disabled={saving}>
-            {saving
-              ? "Saving demo..."
-              : state.bookingState === "confirmed"
-                ? "Confirm changes"
-                : "Confirm visit"}
+            {saving ? "Confirming…" : "Confirm visit"}
           </Button>
           <Link className="button button-secondary" to="/visit/floor-plan">
             <Map size={17} />
@@ -186,98 +197,85 @@ export function VisitPage() {
             <span className="table-number">{selectedTable.displayNumber}</span>
             <div>
               <h3>
-                Table {selectedTable.displayNumber} · {state.preferredZone}
+                Table {selectedTable.displayNumber} · {zone.name}
               </h3>
               <p>{selectedTable.customerDescription}</p>
               <div className="venue-tags">
                 {selectedTable.accessibility ? <Badge tone="teal">Step-free</Badge> : null}
                 {selectedTable.familySuitable ? <Badge>Family suitable</Badge> : null}
-                <Badge>
-                  {selectedTable.minimumCapacity}-{selectedTable.maximumCapacity} people
-                </Badge>
-                <Badge>{selectedTable.noiseLevel} noise</Badge>
+                <Badge>{selectedTable.tableType} table</Badge>
+                <Badge>{selectedTable.noiseLevel} atmosphere</Badge>
               </div>
             </div>
           </div>
         ) : (
-          <p>Select a table from the customer-safe floor plan.</p>
+          <p>Choose a table inside {zone.name}.</p>
         )}
       </Card>
 
-      <Card>
-        <SectionHeading title="Television request" />
+      <Card className="watch-teaser">
         <div className="screen-card">
           <span>
             <Tv2 size={22} />
           </span>
           <div>
-            <h3>{selectedScreen?.name ?? venue.screens[0]?.name ?? "Venue screen"}</h3>
-            <p>
-              {state.venueId === "harbour"
-                ? "Nearby family viewing can show the Cowboys game. Racing screens in the Sports Bar remain unchanged."
-                : `${venue.event.title} follows this venue's local screen schedule.`}
-            </p>
+            <p className="eyebrow">Watch Tonight</p>
+            <h3>{zone.screenSummary}</h3>
+            <p>{zone.eventSummary}</p>
           </div>
         </div>
-        {state.screenRequestState === "approved" ? (
-          <div className="info-strip">
-            <CheckCircle2 size={20} />
-            <span>
-              <strong>Request approved in the demo.</strong> Screen 7 is scheduled for the Cowboys
-              game.
-            </span>
-          </div>
-        ) : (
+        {state.venueId === "harbour" && state.screenRequestState !== "approved" ? (
           <Button
             variant="secondary"
             full
-            onClick={() =>
-              state.setScreenRequestState(state.venueId === "harbour" ? "approved" : "scheduled")
-            }
+            onClick={() => {
+              state.requestScreen("screen-7", "Cowboys vs Broncos");
+              state.setScreenRequestState("approved");
+            }}
           >
-            {state.venueId === "harbour" ? "Request the Cowboys game" : "Review scheduled screens"}
+            Request the Cowboys game
           </Button>
-        )}
-        <p className="microcopy">
-          Screen requests never override locked or regulated zone content.
-        </p>
+        ) : state.screenRequestState === "approved" ? (
+          <div className="success-panel">
+            <CheckCircle2 size={20} />
+            <span>
+              <strong>Request approved</strong>
+              <small>Screen 7 is scheduled for the Cowboys game.</small>
+            </span>
+          </div>
+        ) : null}
+        <Link className="button button-secondary button-full" to="/visit/watch">
+          Open screen control centre
+        </Link>
       </Card>
 
       <Card>
         <SectionHeading title="Arrival and access" />
         <div className="info-strip">
           <Accessibility size={21} />
-          <span>
-            A synthetic step-free route links the main arrival point, amenities and your selected
-            table. Venue staff would confirm the real route.
-          </span>
+          <span>{zone.accessibilitySummary}. Venue staff would confirm the real route.</span>
         </div>
         <div className="access-grid">
           <span>
             <ShieldCheck size={18} />
-            Wheelchair space
+            Human confirmation
           </span>
           <span>
             <UsersRound size={18} />
-            High-chair check
-          </span>
-          <span>
-            <Info size={18} />
-            Human help available
+            Party needs retained
           </span>
         </div>
         {state.bookingState !== "checked-in" ? (
           <Button variant="teal" full onClick={state.checkIn}>
-            Simulate{" "}
-            {selectedTable ? `Table ${selectedTable.displayNumber}` : persona.preferredTableDisplay}{" "}
-            check-in
+            Check in at{" "}
+            {selectedTable ? `Table ${selectedTable.displayNumber}` : persona.preferredTableDisplay}
           </Button>
         ) : (
           <div className="success-panel">
             <CheckCircle2 size={22} />
             <span>
               <strong>Checked in</strong>
-              <small>Tonight mode is active. No QR, camera or location was used.</small>
+              <small>Tonight mode and Table Service are active.</small>
             </span>
           </div>
         )}

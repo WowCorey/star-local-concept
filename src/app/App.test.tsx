@@ -10,9 +10,9 @@ describe("Star Local app shell", () => {
     useDemoStore.getState().setNotice(null);
   });
 
-  it("renders the flagship next action and primary navigation", () => {
+  it("renders the flagship next action and primary navigation", async () => {
     render(<App />);
-    expect(screen.getByRole("heading", { name: "Good evening, Alex" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Good evening, Alex" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Your usual Thursday night?" })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
   });
@@ -20,6 +20,7 @@ describe("Star Local app shell", () => {
   it("opens the scripted assistant with keyboard-usable prompts", async () => {
     const user = userEvent.setup();
     render(<App />);
+    await screen.findByRole("heading", { name: "Good evening, Alex" });
     await user.click(screen.getByRole("button", { name: "Ask Star" }));
     expect(screen.getByRole("dialog", { name: "Ask Star" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "When is the bus arriving?" }));

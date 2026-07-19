@@ -1,32 +1,64 @@
 import { useEffect } from "react";
-import { Accessibility, Flag, RotateCcw, Trophy, X } from "lucide-react";
+import {
+  Accessibility,
+  Flag,
+  Headphones,
+  Martini,
+  PhoneCall,
+  Presentation,
+  RotateCcw,
+  Trophy,
+  Tv2,
+  X,
+} from "lucide-react";
 import { Button, Toggle } from "../../components/ui";
 import { demoRepository } from "../../services/demoRepository";
 import { useDemoStore, type DemoScenario } from "../../state/demoStore";
 import type {
   BookingState,
+  BottleShopCollectionState,
   BusState,
+  DrinkOrderState,
+  LayoutPresetId,
+  MarketingLevel,
   OrderState,
+  ParticipantAcceptance,
+  PhoneAudioState,
+  PhoneCallState,
   PersonaId,
+  ScreenRequestState,
   ServiceState,
   VisitStage,
 } from "../../types/domain";
 
-const scenarioButtons: Array<{ id: DemoScenario; label: string; icon: typeof Flag }> = [
+const scenarios: Array<{ id: DemoScenario; label: string; icon: typeof Flag }> = [
   { id: "flagship", label: "Flagship journey", icon: Flag },
   { id: "sports-night", label: "Sports night", icon: Trophy },
   { id: "accessibility", label: "Accessibility", icon: Accessibility },
+  { id: "executive", label: "Full executive demo", icon: Presentation },
+  { id: "drinks-service", label: "Drinks and service", icon: Martini },
+  { id: "television", label: "Television control", icon: Tv2 },
+  { id: "phone-reception", label: "Phone reception", icon: PhoneCall },
 ];
+
+const options = (values: string[]) =>
+  values.map((value) => (
+    <option key={value} value={value}>
+      {value.replaceAll("-", " ")}
+    </option>
+  ));
 
 export function DemoControls() {
   const state = useDemoStore();
   const personas = demoRepository.getPersonas();
   const venues = demoRepository.getVenues();
+  const venue = demoRepository.getVenue(state.venueId);
+  const layout = demoRepository.getLayout(state.venueId);
+  const presets = demoRepository.getLayoutPresets();
+  const phoneScenarios = demoRepository.getPhoneScenarios();
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") state.setDemoOpen(false);
-    };
+    const onKeyDown = (event: KeyboardEvent) => event.key === "Escape" && state.setDemoOpen(false);
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [state]);
@@ -37,11 +69,16 @@ export function DemoControls() {
       role="presentation"
       onMouseDown={(event) => event.currentTarget === event.target && state.setDemoOpen(false)}
     >
-      <section className="sheet" role="dialog" aria-modal="true" aria-labelledby="demo-title">
+      <section
+        className="sheet demo-sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="demo-title"
+      >
         <header className="sheet-header">
           <div>
             <p className="eyebrow">Presenter only</p>
-            <h2 id="demo-title">Demo Controls</h2>
+            <h2 id="demo-title">Demo Controls v0.2</h2>
           </div>
           <button
             className="icon-button"
@@ -55,21 +92,19 @@ export function DemoControls() {
         <div className="sheet-stack">
           <div className="control-group">
             <h3>Journey presets</h3>
-            <div className="preset-grid">
-              {scenarioButtons.map(({ id, label, icon: Icon }) => (
+            <div className="preset-grid preset-grid-v02">
+              {scenarios.map(({ id, label, icon: Icon }) => (
                 <button type="button" key={id} onClick={() => state.loadScenario(id)}>
                   <Icon size={20} />
-                  <br />
-                  {label}
+                  <span>{label}</span>
                 </button>
               ))}
             </div>
           </div>
-
           <div className="control-group field-grid">
-            <h3>Context</h3>
+            <h3>Customer and venue context</h3>
             <label className="field">
-              <span>Active persona</span>
+              <span>Persona</span>
               <select
                 value={state.personaId}
                 onChange={(event) => state.setPersona(event.target.value as PersonaId)}
@@ -82,29 +117,68 @@ export function DemoControls() {
               </select>
             </label>
             <label className="field">
-              <span>Active venue</span>
+              <span>Venue</span>
               <select
                 value={state.venueId}
                 onChange={(event) => state.setVenue(event.target.value as typeof state.venueId)}
               >
-                {venues.map((venue) => (
-                  <option key={venue.id} value={venue.id}>
-                    {venue.name}
+                {venues.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
                   </option>
                 ))}
               </select>
             </label>
             <label className="field">
-              <span>Simulated day</span>
+              <span>Zone</span>
               <select
-                value={state.simulatedDay}
-                onChange={(event) => state.setSimulatedDay(event.target.value)}
+                value={state.selectedZoneId}
+                onChange={(event) => state.selectZone(event.target.value)}
               >
-                <option>Wednesday</option>
-                <option>Thursday</option>
-                <option>Saturday</option>
-                <option>Tuesday</option>
-                <option>Sunday</option>
+                {venue.zones
+                  .filter((zone) => zone.customerVisible && zone.slug)
+                  .map((zone) => (
+                    <option key={zone.id} value={zone.id}>
+                      {zone.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Layout preset</span>
+              <select
+                value={state.layoutPresetId}
+                onChange={(event) => state.setLayoutPreset(event.target.value as LayoutPresetId)}
+              >
+                {presets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Selected table</span>
+              <select
+                value={state.selectedTableId}
+                onChange={(event) => state.selectTable(event.target.value)}
+              >
+                {layout.tables
+                  .filter((table) => table.zoneId === state.selectedZoneId)
+                  .map((table) => (
+                    <option key={table.id} value={table.id}>
+                      Table {table.displayNumber}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Visit stage</span>
+              <select
+                value={state.stage}
+                onChange={(event) => state.setStage(event.target.value as VisitStage)}
+              >
+                {options(["before-visit", "approaching", "in-venue", "after-visit"])}
               </select>
             </label>
             <label className="field">
@@ -114,29 +188,16 @@ export function DemoControls() {
                 onChange={(event) => state.setSimulatedTime(event.target.value)}
               />
             </label>
-            <label className="field">
-              <span>Visit stage</span>
-              <select
-                value={state.stage}
-                onChange={(event) => state.setStage(event.target.value as VisitStage)}
-              >
-                <option value="before-visit">Before visit</option>
-                <option value="approaching">Approaching venue</option>
-                <option value="in-venue">In venue</option>
-                <option value="after-visit">After visit</option>
-              </select>
-            </label>
           </div>
-
           <div className="control-group field-grid">
-            <h3>Visit and service states</h3>
+            <h3>Booking, order and service</h3>
             <label className="field">
               <span>Booking</span>
               <select
                 value={state.bookingState}
                 onChange={(event) => state.setBookingState(event.target.value as BookingState)}
               >
-                {[
+                {options([
                   "suggested",
                   "held",
                   "confirmed",
@@ -144,43 +205,16 @@ export function DemoControls() {
                   "cancelled",
                   "checked-in",
                   "completed",
-                ].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                ])}
               </select>
             </label>
             <label className="field">
-              <span>Ride</span>
-              <select
-                value={state.rideState}
-                onChange={(event) => state.setRideState(event.target.value as BusState)}
-              >
-                {[
-                  "requested",
-                  "window-confirmed",
-                  "driver-assigned",
-                  "en-route",
-                  "arriving",
-                  "boarded",
-                  "completed",
-                  "delayed",
-                  "missed",
-                ].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>Order</span>
+              <span>Food order</span>
               <select
                 value={state.orderState}
                 onChange={(event) => state.setOrderState(event.target.value as OrderState)}
               >
-                {[
+                {options([
                   "draft",
                   "awaiting-confirmation",
                   "submitted",
@@ -188,11 +222,48 @@ export function DemoControls() {
                   "ready",
                   "delivered",
                   "issue-reported",
-                ].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                ])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Drink review</span>
+              <select
+                value={state.drinkOrder.state}
+                onChange={(event) =>
+                  state.setDrinkOrderState(event.target.value as DrinkOrderState)
+                }
+              >
+                {options([
+                  "draft",
+                  "submitted",
+                  "staff-review",
+                  "accepted",
+                  "modified",
+                  "declined",
+                  "preparing",
+                  "delivered",
+                ])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Group participant</span>
+              <select
+                value={state.groupRound.participants[0]?.acceptance}
+                onChange={(event) =>
+                  state.setParticipantAcceptance(
+                    state.groupRound.participants[0]!.id,
+                    event.target.value as ParticipantAcceptance,
+                  )
+                }
+              >
+                {options([
+                  "pending",
+                  "accepted",
+                  "declined",
+                  "staff-order",
+                  "age-check",
+                  "delivered",
+                ])}
               </select>
             </label>
             <label className="field">
@@ -206,67 +277,215 @@ export function DemoControls() {
                 }
               >
                 <option value="none">none</option>
-                {["requested", "accepted", "on-the-way", "completed"].map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
+                {options(["requested", "accepted", "on-the-way", "completed"])}
               </select>
             </label>
             <label className="field">
-              <span>Kitchen wait time</span>
+              <span>Kitchen wait</span>
               <select
                 value={state.kitchenWaitTime}
                 onChange={(event) => state.setKitchenWaitTime(Number(event.target.value))}
               >
                 <option value={18}>18 minutes</option>
-                <option value={35}>35 minute delay</option>
-                <option value={0}>Service unavailable</option>
+                <option value={35}>35 minutes</option>
+                <option value={0}>Unavailable</option>
               </select>
             </label>
             <label className="field">
-              <span>Member-draw entries</span>
-              <input
-                type="number"
-                min={0}
-                value={state.drawEntries}
-                onChange={(event) =>
-                  useDemoStore.setState({ drawEntries: Number(event.target.value) })
-                }
-              />
-            </label>
-            <label className="field">
-              <span>Active promotion</span>
-              <input
-                value={state.activePromotion}
-                onChange={(event) => state.setActivePromotion(event.target.value)}
-              />
+              <span>Bar wait</span>
+              <select
+                value={state.barWaitTime}
+                onChange={(event) => state.setBarWaitTime(Number(event.target.value))}
+              >
+                <option value={6}>6 minutes</option>
+                <option value={12}>12 minutes</option>
+                <option value={25}>25 minutes</option>
+              </select>
             </label>
           </div>
-
+          <div className="control-group field-grid">
+            <h3>Screen, audio and transport</h3>
+            <label className="field">
+              <span>Ride</span>
+              <select
+                value={state.rideState}
+                onChange={(event) => state.setRideState(event.target.value as BusState)}
+              >
+                {options([
+                  "requested",
+                  "window-confirmed",
+                  "driver-assigned",
+                  "en-route",
+                  "arriving",
+                  "boarded",
+                  "completed",
+                  "delayed",
+                  "missed",
+                ])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Screen request</span>
+              <select
+                value={state.screenRequestState}
+                onChange={(event) =>
+                  state.setScreenRequestState(event.target.value as ScreenRequestState)
+                }
+              >
+                {options(["idle", "requested", "approved", "scheduled", "active", "unavailable"])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Phone audio</span>
+              <select
+                value={state.phoneAudioState}
+                onChange={(event) =>
+                  state.setPhoneAudioState(
+                    event.target.value as PhoneAudioState,
+                    state.phoneAudioScreenId ?? "screen-7",
+                  )
+                }
+              >
+                {options(["unavailable", "available", "active", "paused"])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Screen schedule</span>
+              <select
+                value={state.screenRequestScreenId ?? "none"}
+                onChange={(event) =>
+                  useDemoStore.setState({
+                    screenRequestScreenId:
+                      event.target.value === "none" ? null : event.target.value,
+                  })
+                }
+              >
+                <option value="none">Default schedule</option>
+                {venue.screens.map((screen) => (
+                  <option key={screen.id} value={screen.id}>
+                    {screen.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="control-group field-grid">
+            <h3>Rewards, marketing, collection and phone</h3>
+            <label className="field">
+              <span>Draw countdown</span>
+              <select
+                value={state.drawCountdown}
+                onChange={(event) => state.setDrawCountdown(Number(event.target.value))}
+              >
+                <option value={30}>30 minutes</option>
+                <option value={10}>10 minutes</option>
+                <option value={1}>1 minute</option>
+              </select>
+            </label>
+            <label className="field">
+              <span>Fictional draw result</span>
+              <select
+                value={state.fictionalDrawResult}
+                onChange={(event) =>
+                  state.setFictionalDrawResult(
+                    event.target.value as typeof state.fictionalDrawResult,
+                  )
+                }
+              >
+                {options(["pending", "not-selected", "selected"])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Marketing level</span>
+              <select
+                value={state.marketingLevel}
+                onChange={(event) => state.setMarketingLevel(event.target.value as MarketingLevel)}
+              >
+                {options(["group", "venue", "customer"])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Bottle-shop state</span>
+              <select
+                value={state.bottleShopCollection.state}
+                onChange={(event) =>
+                  state.setBottleShopState(event.target.value as BottleShopCollectionState)
+                }
+              >
+                {options(["not-started", "reserved", "preparing", "ready", "collected"])}
+              </select>
+            </label>
+            <label className="field">
+              <span>Phone scenario</span>
+              <select
+                value={state.phoneScenarioId}
+                onChange={(event) => state.setPhoneScenario(event.target.value)}
+              >
+                {phoneScenarios.map((scenario) => (
+                  <option key={scenario.id} value={scenario.id}>
+                    {scenario.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Phone call state</span>
+              <select
+                value={state.phoneCallState}
+                onChange={(event) => state.setPhoneCallState(event.target.value as PhoneCallState)}
+              >
+                {options([
+                  "incoming",
+                  "disclosed",
+                  "identifying",
+                  "gathering",
+                  "confirming",
+                  "completed",
+                  "human-transfer",
+                ])}
+              </select>
+            </label>
+          </div>
           <div className="control-group toggle-list">
-            <h3>Review and availability</h3>
+            <h3>Presenter overlays</h3>
             <Toggle
               checked={state.staffReview}
               onChange={() => state.setStaffReview(!state.staffReview)}
-              label="Staff review state"
-              description="Shows human confirmation for safety-sensitive actions"
+              label="Staff-review emphasis"
+              description="Keeps a human decision visible"
             />
             <Toggle
               checked={state.phoneAudioAvailable}
               onChange={() => state.setPhoneAudio(!state.phoneAudioAvailable)}
               label="Phone audio available"
-              description="Simulated only; no audio stream"
+              description="Venue-only local simulation"
             />
             <Toggle
-              checked={state.soldOutItemIds.includes("harbour-chowder")}
-              onChange={() => state.toggleSoldOut("harbour-chowder")}
-              label="Chowder sold out"
-              description="Demonstrates a venue-local alternative"
+              checked={state.presentationActive}
+              onChange={() =>
+                state.presentationActive ? state.exitPresentation() : state.startPresentation()
+              }
+              label="Presentation mode"
+              description="16 guided meeting steps"
             />
           </div>
-
-          <Button variant="danger" full onClick={() => state.resetDemo()}>
+          <div className="inline-actions">
+            <Button
+              variant="teal"
+              onClick={() => {
+                state.setDemoOpen(false);
+                state.setPhoneOpen(true);
+              }}
+            >
+              <Headphones size={17} />
+              Open phone simulation
+            </Button>
+            <Button variant="secondary" onClick={state.startPresentation}>
+              <Presentation size={17} />
+              Start presentation
+            </Button>
+          </div>
+          <Button variant="danger" full onClick={state.resetDemo}>
             <RotateCcw size={18} />
             Reset demo
           </Button>

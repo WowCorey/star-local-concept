@@ -2,36 +2,39 @@
 
 ## Standard
 
-All top-level entities are explicitly marked `synthetic: true`. Names, identifiers, combinations of preferences, balances, events, layouts, products and prices were created for this prototype and must not be replaced with lightly edited real records.
+Every exported top-level fixture is wholly fabricated and marked `synthetic: true`. Names, identifiers, preference combinations, balances, layouts, products, prices, events, transcripts and states must never be derived from real customer or operational records.
 
-Fixture validation checks that:
+Fixture validation checks synthetic flags, venue references, layout references, zone/table/screen relationships, menu and schedule integrity, and the exclusion of regulated areas from customer-visible zones.
 
-- every top-level entity is synthetic;
-- persona venue references exist;
-- venue layouts exist;
-- menu references resolve; and
-- customer-visible venue zones exclude the fictional regulated gaming area.
+## Domains
 
-## Entity groups
+- `personas.ts` — Alex, Jordan and Taylor; permissions, accessibility, communications and editable memory
+- `venues.ts` — three fictional venues, customer zones, service capabilities, screen rules and event context
+- `layouts.ts` — original normalised table geometry with zone, access, atmosphere, type and sightline attributes
+- `layoutPresets.ts` — weekday, draw, dinner, game, UFC, trivia, birthday and function transformations
+- `entertainment.ts` — venue-local events and screen schedules
+- `menus.ts` — food items, modifications, stock and preparation estimates
+- `drinks.ts` — tap, wine, premix, cocktail, zero-alcohol and water items with size, price, stock and review requirements
+- `group.ts` — identified synthetic round participants
+- `operations.ts` — function-level service routing, marketing explanations, collection products and phone transcripts
+- `presentation.ts` — the 16 guided presentation steps
 
-- `personas.ts` - Alex Morgan, Jordan Lee and Taylor Smith, including permissions and editable memories
-- `venues.ts` - three fictional venues with local zones, screens, services and events
-- `layouts.ts` - authored customer-safe geometry for Thursday draw, UFC and accessible trivia contexts
-- `menus.ts` - permanent items, venue-local specials, stock states and representational products
-- `group.ts` - fictional Table 23 group-order participants
+## Stable IDs and relationships
 
-## IDs and addresses
+IDs such as `table-23`, `north-screen-1`, `shop-pale-six` and `DEMO-10482` are obvious prototype identifiers. A table points to one venue and zone and may reference visible screen IDs. Schedules point to one venue screen. A campaign explicitly lists its permitted basis and excluded inputs.
 
-Identifiers use clear demo forms such as `DEMO-10482`, `table-23` and `harbour-parmi`. No fixture includes a street address, phone number, date of birth, valid credential, payment detail or real route. If email data is added later, use an approved reserved example domain and keep `synthetic: true`.
+No fixture includes a real street address, phone number, birth date, credential, payment detail, GPS route, venue floor plan, employee identity or valid membership record.
 
-## Time
+## Time and availability
 
-The UI reads simulated day and time from Demo Controls. Time-sensitive menu and event copy must never depend on the viewer's actual date or location.
+The app reads only the simulated day and time in the store. It does not use the viewer's clock, location, weather or a live feed. Stock, wait times, schedules, request outcomes, reward results and service progress are presenter-controlled deterministic states.
 
 ## Adding fixtures
 
-1. Confirm the full record is fabricated.
-2. Add `synthetic: true`.
-3. Keep venue-local information local; do not create accidental group-wide defaults.
-4. Add or extend fixture validation.
-5. Run `npm run test` and the relevant Playwright journey.
+1. Fabricate the complete record and mark it `synthetic: true`.
+2. Keep venue behaviour venue-local; do not create accidental group-wide defaults.
+3. Use stable obvious demo IDs and resolve every foreign key.
+4. Keep accessibility descriptive and preference-based; do not add diagnosis or medical history.
+5. Never add RSA decisions, exclusion records, security incidents or gaming activity.
+6. Extend fixture validation and relevant unit/Playwright coverage.
+7. Run `npm run test`, `npm run typecheck` and the affected browser journeys.

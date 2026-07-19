@@ -12,6 +12,7 @@ export const menuItems: MenuItem[] = [
     tags: ["Alex's usual", "Customisable"],
     availability: "available",
     savedPreference: "Barbecue base, chips and salad, no dressing",
+    preparationMinutes: 18,
   },
   {
     id: "harbour-roast",
@@ -24,6 +25,7 @@ export const menuItems: MenuItem[] = [
     tags: ["Dinner only"],
     availability: "dinner-only",
     special: { label: "Tonight only", expires: "End of dinner service" },
+    preparationMinutes: 24,
   },
   {
     id: "harbour-kids",
@@ -35,6 +37,7 @@ export const menuItems: MenuItem[] = [
     category: "Kids",
     tags: ["Family favourite"],
     availability: "available",
+    preparationMinutes: 14,
   },
   {
     id: "harbour-chowder",
@@ -47,6 +50,7 @@ export const menuItems: MenuItem[] = [
     tags: ["Low stock"],
     availability: "low-stock",
     special: { label: "Member special", expires: "9:00 pm demo time" },
+    preparationMinutes: 22,
   },
   {
     id: "harbour-zero",
@@ -58,6 +62,7 @@ export const menuItems: MenuItem[] = [
     category: "Zero-Alcohol Drinks",
     tags: ["Zero alcohol"],
     availability: "available",
+    preparationMinutes: 4,
   },
   {
     id: "north-wings",
@@ -70,6 +75,7 @@ export const menuItems: MenuItem[] = [
     tags: ["Event favourite"],
     availability: "available",
     special: { label: "Event special", expires: "End of UFC event" },
+    preparationMinutes: 16,
   },
   {
     id: "north-burger",
@@ -81,6 +87,7 @@ export const menuItems: MenuItem[] = [
     category: "Favourites",
     tags: ["Late service"],
     availability: "available",
+    preparationMinutes: 18,
   },
   {
     id: "north-fries",
@@ -92,6 +99,7 @@ export const menuItems: MenuItem[] = [
     category: "Sides",
     tags: ["Shareable"],
     availability: "available",
+    preparationMinutes: 12,
   },
   {
     id: "north-zero",
@@ -103,6 +111,7 @@ export const menuItems: MenuItem[] = [
     category: "Zero-Alcohol Drinks",
     tags: ["Zero alcohol"],
     availability: "available",
+    preparationMinutes: 4,
   },
   {
     id: "hinterland-steak",
@@ -115,6 +124,7 @@ export const menuItems: MenuItem[] = [
     tags: ["Tuesday"],
     availability: "available",
     special: { label: "Tonight only", expires: "End of Tuesday service" },
+    preparationMinutes: 19,
   },
   {
     id: "hinterland-roast",
@@ -126,6 +136,7 @@ export const menuItems: MenuItem[] = [
     category: "Bistro Classics",
     tags: ["Community classic"],
     availability: "available",
+    preparationMinutes: 18,
   },
   {
     id: "hinterland-curry",
@@ -138,6 +149,7 @@ export const menuItems: MenuItem[] = [
     tags: ["Vegetarian choice"],
     availability: "low-stock",
     special: { label: "Member special", expires: "8:30 pm demo time" },
+    preparationMinutes: 20,
   },
   {
     id: "hinterland-collection",
@@ -150,5 +162,6 @@ export const menuItems: MenuItem[] = [
     tags: ["Representation only"],
     availability: "available",
     requiresStaffReview: true,
+    preparationMinutes: 6,
   },
 ];

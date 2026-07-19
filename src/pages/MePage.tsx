@@ -1,15 +1,5 @@
 import { useState } from "react";
-import {
-  Accessibility,
-  CheckCircle2,
-  ChevronDown,
-  Edit3,
-  EyeOff,
-  Pause,
-  Shield,
-  Trash2,
-  UserRound,
-} from "lucide-react";
+import { Accessibility, Edit3, EyeOff, Pause, Shield, Trash2 } from "lucide-react";
 import { Badge, Button, Card, PageIntro, SectionHeading, Toggle } from "../components/ui";
 import { demoRepository } from "../services/demoRepository";
 import { useDemoStore } from "../state/demoStore";
@@ -33,19 +23,6 @@ const communicationLabels: Record<keyof CommunicationPreferences, [string, strin
   transport: ["Courtesy transport", "Your own ride updates"],
   generalMarketing: ["General marketing", "Broader group messages"],
 };
-
-const serviceKinds = [
-  "Water",
-  "Extra cutlery",
-  "Napkins",
-  "Sauce",
-  "High chair",
-  "Clean table",
-  "Missing item",
-  "Order problem",
-  "Accessibility assistance",
-  "Speak to staff",
-];
 
 export function MePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -223,62 +200,6 @@ export function MePage() {
             ),
           )}
         </div>
-      </Card>
-
-      <Card id="service">
-        <SectionHeading
-          title="Ask for service"
-          action={
-            state.serviceRequestState ? (
-              <Badge tone={state.serviceRequestState === "completed" ? "success" : "teal"}>
-                {state.serviceRequestState}
-              </Badge>
-            ) : null
-          }
-        />
-        <p>Every request is a local simulation with a clear human route.</p>
-        <div className="service-grid">
-          {serviceKinds.map((kind) => (
-            <button
-              type="button"
-              key={kind}
-              onClick={() => state.requestService(kind)}
-              className={state.serviceRequestKind === kind ? "active" : ""}
-            >
-              {kind}
-              <ChevronDown size={14} />
-            </button>
-          ))}
-        </div>
-        {state.serviceRequestKind ? (
-          <div className="service-status">
-            <span>
-              <UserRound size={20} />
-            </span>
-            <div>
-              <strong>{state.serviceRequestKind}</strong>
-              <small>{state.serviceRequestState?.replaceAll("-", " ")}</small>
-            </div>
-            {state.serviceRequestState !== "completed" ? (
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  state.setServiceRequestState(
-                    state.serviceRequestState === "requested"
-                      ? "accepted"
-                      : state.serviceRequestState === "accepted"
-                        ? "on-the-way"
-                        : "completed",
-                  )
-                }
-              >
-                Advance
-              </Button>
-            ) : (
-              <CheckCircle2 size={21} />
-            )}
-          </div>
-        ) : null}
       </Card>
 
       <Card>

@@ -10,9 +10,32 @@ export type AssistantIntent =
   | "accessible-entrance"
   | "human"
   | "gaming-boundary"
+  | "sports-table"
+  | "outside-table"
+  | "group-round"
+  | "move-ufc"
+  | "fast-food"
+  | "ride-ten"
+  | "access-party"
+  | "nearby-watch"
+  | "listen-screen"
+  | "marketing-why"
   | "unknown";
 
 const catalogue: Array<{ id: AssistantIntent; patterns: RegExp[] }> = [
+  {
+    id: "sports-table",
+    patterns: [/sports bar.*(six|6).*(cowboys|game)/i, /six.*sports bar.*cowboys/i],
+  },
+  { id: "outside-table", patterns: [/book.*outside/i, /outside.*suitable table/i] },
+  { id: "group-round", patterns: [/order.*round.*(four|4)/i, /round.*adults/i] },
+  { id: "move-ufc", patterns: [/move.*closer.*ufc/i, /better.*ufc.*view/i] },
+  { id: "fast-food", patterns: [/order.*under.*20/i, /ready.*under.*20/i] },
+  { id: "ride-ten", patterns: [/get.*home.*(ten|10)/i, /ride.*around.*(ten|10)/i] },
+  { id: "access-party", patterns: [/wheelchair.*high chair/i, /high chair.*wheelchair/i] },
+  { id: "nearby-watch", patterns: [/what.*on.*near.*table/i, /what(?:'s| is).*on.*near us/i] },
+  { id: "listen-screen", patterns: [/listen.*screen\s*7/i] },
+  { id: "marketing-why", patterns: [/why.*(offer|seeing this)/i] },
   { id: "book-usual", patterns: [/book.*usual/i, /usual table/i, /same.*thursday/i] },
   { id: "modify-meal", patterns: [/parmi.*barbecue/i, /barbecue.*parmi/i, /change.*meal/i] },
   { id: "bus-status", patterns: [/where.*bus/i, /bus.*arriv/i, /eta/i] },

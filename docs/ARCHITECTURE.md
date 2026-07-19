@@ -2,47 +2,73 @@
 
 ## Runtime boundary
 
-Star Local runs entirely in the browser:
+Star Local v0.2 is a static, browser-only React application:
 
 ```text
-React UI
-  -> HashRouter (GitHub Pages-safe routes)
-  -> Zustand demo state
-  -> typed fixture repository
-  -> deterministic mock delays
-  -> localStorage
+AppShell
+  ├─ HashRouter → lazy page chunks
+  ├─ global overlays → Ask Star, Table Service, phone, presentation, demo controls
+  ├─ Zustand demo store → explicit transitions → localStorage
+  └─ demoRepository → typed synthetic fixtures
 ```
 
-There is no database, server, production authentication, telemetry, secret, live AI service or venue-system integration.
+There is no server, database, authentication, telemetry, live AI or third-party venue integration. The only production request is for the static Pages bundle itself.
 
-## Design decisions
+## Routing and presentation shell
 
-### Hash routing
+`HashRouter` preserves deep navigation on GitHub Pages without a custom 404. The Vite base remains `/star-local-concept/`. Visit and Order use nested routes so direct links remain understandable:
 
-`HashRouter` preserves deep navigation on GitHub Pages without a custom 404 rewrite. The Vite bundle still uses the required `/star-local-concept/` base path.
+- `/visit/zones`, `/visit/floor-plan`, `/visit/watch`
+- `/order/food`, `/order/drinks`, `/order/group`, `/order/status`, `/order/collection`
 
-### Fixture repository boundary
+Page modules are lazy loaded behind an accessible route status. The shell, primary navigation and global service surfaces remain mounted so a visit state can continue across routes. Vite splits the larger route families into cacheable chunks.
 
-Pages read venue, member, layout and menu data through `demoRepository`. The service exposes stable query methods and a few asynchronous mock actions. A future implementation can replace those contracts without embedding data arrays in page components.
+On wide screens the app appears inside a bounded mobile frame beside presenter context and a locally rendered SVG QR code. On narrow screens it becomes the full viewport. The frame height is viewport-bounded so the sticky primary navigation never obscures actions.
 
-### Explicit demo state
+## Domain boundaries
 
-The Zustand store models booking, order, courtesy-bus, screen-request and service-request states as named unions. Actions such as `confirmVisit`, `checkIn`, `confirmRide`, `chooseOrder` and `resetDemo` make transitions inspectable and testable.
+The v0.2 fixture model is divided by responsibility:
 
-State persists to `localStorage` using the versioned key `star-local-demo-v1`. Overlay and notification visibility are cleared during persistence so a reload never traps a presenter in a sheet.
+- `venues.ts` — venue identity, service capability, rich zone metadata and screen metadata
+- `layouts.ts` and `layoutPresets.ts` — synthetic table geometry and event-specific transformations
+- `entertainment.ts` — events and screen schedules
+- `menus.ts` and `drinks.ts` — food and separate drink products
+- `operations.ts` — service teams, campaigns, bottle-shop items and phone-call scenarios
+- `presentation.ts` — guided meeting sequence
+- `personas.ts` and `group.ts` — synthetic customer-controlled preferences and participants
 
-### Customer-safe floor plans
+Pages query fixtures through `demoRepository`; they do not embed authoritative arrays. This makes the static repository a replaceable boundary for a future approved API.
 
-Layouts use normalised synthetic geometry with a list-view equivalent. The UI exposes capacity, access, family suitability, noise and nearby screens but never shows customer names, staff notes, conflicts or live operational availability.
+## State and migration
 
-### Controlled prototype depth
+`demoStore.ts` models visit, booking, table, layout, ride, food, drink review, group acceptance, screen request, phone audio, service request, marketing, collection, phone call, rewards and presentation state as named TypeScript unions.
 
-Visible actions change state convincingly while all results stay deterministic. Check-in never invokes a camera or location. Payment never creates a charge. The digital card uses a deliberately decorative non-scannable pattern. Bus timing becomes an approximate ETA only during the simulated approach stage.
+The persistence key intentionally stays `star-local-demo-v1` so existing browsers can upgrade in place. Zustand persistence version `2` runs `migrateDemoState`, which:
 
-## Product assumptions
+1. starts from the complete v0.2 defaults;
+2. preserves recognised v0.1 values;
+3. derives the correct venue zone, table and layout where older fields are missing;
+4. merges nested drink, collection and preference records; and
+5. clears transient sheets and notices so hydration cannot trap the interface.
 
-- Alex's Wednesday invitation is the default state because it is the rehearsable flagship journey.
-- A venue switch changes fixtures immediately; group-wide behaviour does not override venue-local menus, events, screens or transport.
-- Accessibility preferences can change presentation and visit planning without collecting medical detail.
-- A staff-review route is retained for alcohol, allergies, accessible transport and service problems.
-- Gaming, exclusions, RSA decisions, security incidents and staff safety reports are outside the recommendation model and absent from fixtures.
+Unknown or missing records fall back to synthetic defaults. Reset rebuilds the full initial object.
+
+## Operating rules
+
+- A selected zone restricts table and screen choices.
+- A layout preset can move, join or hide tables without changing their stable identity.
+- A table's sightline IDs determine which screens are plausibly visible.
+- Locked screens cannot be requested; scheduled screens expose their programme; requestable screens accept a local request.
+- Food confirmation and drink review are separate state machines.
+- Alcohol items never bypass `staff-review`; a staff-controlled decline produces non-alcoholic alternatives.
+- Group-round items are assigned to identified synthetic participants with independent acceptance states.
+- Table Service maps request kinds to venue-function fixtures such as Bistro Team or Duty Manager.
+- The simulated telephone receptionist writes a confirmed booking and optional ride into the same store; serious-allergy questions enter `human-transfer`.
+
+## Performance and dependencies
+
+The implementation uses React, React Router, Zustand, Lucide and a small QR component. It adds no UI framework, remote font, animation library, image bundle, video or runtime service. Route splitting keeps the initial presentation shell separate from larger Visit and Order experiences.
+
+## Intentionally absent
+
+Production authentication, payments, alcohol supply, booking/POS/phone integration, continuous transport tracking, geolocation, staff operations, analytics, live AI, real venue-layout editing and all gaming controls are outside this architecture.
